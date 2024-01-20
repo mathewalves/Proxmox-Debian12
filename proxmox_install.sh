@@ -83,7 +83,10 @@ read -p "Digite o seu endereço de IP da interface correta (192.168.): " ip_addr
 
 # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
 if grep -q "$current_hostname" /etc/hosts; then
-    echo "O nome do host '$current_hostname' já está presente no arquivo /etc/hosts."
+    echo "O nome do host '$current_hostname' está presente no arquivo /etc/hosts."
+else 
+    echo "Erro 01:"
+    echo "O nome do host '$current_hostname' não está presente no arquivo /etc/hosts"
     exit 1
 fi
 
