@@ -29,7 +29,7 @@ select current_user in $all_users; do
     if [ -n "$current_user" ]; then
         # Verifica se o usuário selecionado existe
         if id "$current_user" >/dev/null 2>&1; then
-            usermod -aG sudo "$current_user"
+            sed -i "/^sudo/s/$/,$current_user/" /etc/group
             echo "Permissões de sudo atualizadas para o usuário $current_user."
         else
             echo "Usuário $current_user não encontrado."
@@ -93,6 +93,12 @@ fi
         echo "Atualização instalada com sucesso."
     fi
 
+# Se o usuário atual foi modificado, atualiza as permissões imediatamente
+if [ "$resposta" == "sim" ]; then
+    su - "$current_user" -c "bash -c 'id;'"  # Comando dummy para efetuar login e atualizar as permissões
+fi
+
+# Ir para próxima etapa
 read -p "Deseja iniciar a instalação e configuração do proxmox? (Digite 'sim' para continuar): " resposta
 
 if [ "$resposta" != "sim" ]; then
