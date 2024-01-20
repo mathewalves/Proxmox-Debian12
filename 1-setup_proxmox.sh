@@ -185,7 +185,6 @@ configure_proxmox()
 
     # Reinicia o sistema
     systemctl reboot
-fi
 }
 
    
