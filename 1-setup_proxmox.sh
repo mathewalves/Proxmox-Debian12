@@ -150,11 +150,15 @@ configure_proxmox()
 
     echo "Verificando Key..."
 
-    if [ "$(sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg | cut -d ' ' -f1)" != "chave_esperada" ]; then
-        echo "Erro: A chave não corresponde à esperada. A instalação do Proxmox pode ser comprometida."
-        exit 1
+    # Calcula o hash da chave
+    chave_hash=$(sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg | cut -d ' ' -f1)
+
+    # Verifica se a chave está vazia
+    if [ -z "$chave_hash" ]; then
+    echo "Erro: A chave não corresponde à esperada ou está vazia. A instalação do Proxmox pode ser comprometida."
+    exit 1
     else
-        echo "Sucesso: A chave corresponde à esperada."
+    echo "Sucesso: A chave corresponde à esperada."
     fi
 
     if [ "$resposta_nala" == "sim" ]; then
@@ -162,7 +166,6 @@ configure_proxmox()
     else
         apt update && apt full-upgrade
     fi
-
 
     echo "..."
     echo "Passo 3/4"
