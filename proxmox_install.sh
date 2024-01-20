@@ -1,3 +1,5 @@
+current_user=$USER
+
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
     echo "Tornando-se superusuário..."
@@ -6,7 +8,7 @@ if [ "$(whoami)" != "root" ]; then
 fi
 
 echo "Bem-vindo ao script de instalação do Proxmox no Debian 12 Bookworm"
-echo "Este script também perguntará se você deseja instalar alguns pacotes adicionais, 
+echo "Este script também instalará o 'sudo' e perguntará se você deseja instalar alguns pacotes adicionais, 
 como 'nala', 'neofetch' e pacotes de ferramentas de rede: 'net-tools' e 'nmap'."
 
 read -p "Deseja iniciar a instalação? (Digite 'sim' para continuar): " resposta
@@ -17,8 +19,25 @@ if [ "$resposta" != "sim" ]; then
 fi
 
 echo "Iniciando a instalação..."
+apt-get update
 
-# Instalando pacotes
+# Instalando pacotes ---------------------->
+
+# sudo
+echo "Iniciando instalação do sudo..."
+apt-get install -y sudo
+
+echo "Atualizando permições de sudo para o usuário '$current_user'..."
+
+
+if id "$current_user" >/dev/null 2>&1; then
+    usermod -aG sudo "$current_user"
+    echo "Permissões de sudo atualizadas para o usuário $current_user."
+else
+    echo "Usuário $current_user não encontrado."
+fi
+
+
 # nala
 read -p "Deseja instalar o 'nala'? (Opcional) (Digite 'sim' para instalar): " resposta_nala
 
@@ -91,7 +110,7 @@ else
 fi
 
 # Adicionar a nova entrada ao arquivo /etc/hosts
-echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | sudo tee -a /etc/hosts > /dev/null
+echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | tee -a /etc/hosts > /dev/null
 
 echo "Entrada adicionada com sucesso ao arquivo /etc/hosts:"
 cat /etc/hosts | grep "$current_hostname"
