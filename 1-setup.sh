@@ -1,12 +1,6 @@
-current_user=$USER
+#!/bin/bash
 
-# Tornando-se root
-if [ "$(whoami)" != "root" ]; then
-    echo "Tornando-se superusuário..."
-fi
-
-echo "Bem-vindo ao script de instalação do Proxmox no Debian 12 Bookworm"
-echo "Este script também instalará o 'sudo' e perguntará se você deseja instalar alguns pacotes adicionais, 
+echo "Este script instalará no seu Debian o 'sudo' e perguntará se você deseja instalar alguns pacotes adicionais, 
 como 'nala', 'neofetch' e pacotes de ferramentas de rede: 'net-tools' e 'nmap'."
 
 read -p "Deseja iniciar a instalação? (Digite 'sim' para continuar): " resposta
@@ -25,16 +19,26 @@ apt-get update
 echo "Iniciando instalação do sudo..."
 apt-get install -y sudo
 
-echo "Atualizando permições de sudo para o usuário '$current_user'..."
+echo "Selecione um usuário para adicionar permissões sudo:"
 
+# Lista todos os usuários do sistema
+all_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1)
 
-if id "$current_user" >/dev/null 2>&1; then
-    usermod -aG sudo "$current_user"
-    echo "Permissões de sudo atualizadas para o usuário $current_user."
-else
-    echo "Usuário $current_user não encontrado."
-fi
-
+# Mostra uma lista numerada de usuários
+select current_user in $all_users; do
+    if [ -n "$current_user" ]; then
+        # Verifica se o usuário selecionado existe
+        if id "$current_user" >/dev/null 2>&1; then
+            usermod -aG sudo "$current_user"
+            echo "Permissões de sudo atualizadas para o usuário $current_user."
+        else
+            echo "Usuário $current_user não encontrado."
+        fi
+        break
+    else
+        echo "Opção inválida. Tente novamente."
+    fi
+done
 
 # nala
 read -p "Deseja instalar o 'nala'? (Opcional) (Digite 'sim' para instalar): " resposta_nala
@@ -79,45 +83,21 @@ else
     echo "Continuando a instalação sem as ferramentas de rede..."
 fi
 
-# Comandos de instalação do Proxmox
-echo "iniciando instalação do Proxmox"
-echo "..."
-echo "Passo 1/4"
-echo "Adicionando uma entrada em /etc/hosts para seu endereço ip."
+ if [ "$resposta_nala" == "sim" ]; then
+        echo "Atualizando o sistema..."
+        nala update && nala upgrade
+        echo "Atualização instalada com sucesso."
+    else
+        echo "Iniciando a instalação do 'net-tools' & 'nmap' com o apt..."
+        apt-get update && apt-get upgrade
+        echo "Atualização instalada com sucesso."
+    fi
 
-# Obtendo o nome do host atual
-current_hostname=$(hostname)
+read -p "Deseja iniciar a instalação e configuração do proxmox? (Digite 'sim' para continuar): " resposta
 
-echo "Seu hostname:"
-hostname
-
-# Exibir interfaces de rede
-echo "Suas interfaces de rede"
-ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1]}'
-
-# Solicitar o endereço IP
-read -p "Digite o seu endereço de IP da interface correta (192.168.): " ip_address
-
-# Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
-if grep -q "$current_hostname" /etc/hosts; then
-    echo "O nome do host '$current_hostname' está presente no arquivo /etc/hosts."
-else 
-    echo "Erro 01:"
-    echo "O nome do host '$current_hostname' não está presente no arquivo /etc/hosts"
+if [ "$resposta" != "sim" ]; then
+    echo "Saindo do script."
     exit 1
+else
+    ./2-proxmox.sh
 fi
-
-# Adicionar a nova entrada ao arquivo /etc/hosts
-echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | tee -a /etc/hosts > /dev/null
-
-echo "Entrada adicionada com sucesso ao arquivo /etc/hosts:"
-cat /etc/hosts | grep "$current_hostname"
-
-echo "Configuração de ip feita com sucesso:"
-hostname
-hostname --ip-address
-
-# Substitua este comentário pelos comandos reais de instalação do Proxmox e outros pacotes
-
-echo "Instalação concluída com sucesso!"
-echo "Lembre-se de configurar o Proxmox conforme necessário após a instalação."
