@@ -65,21 +65,25 @@ fi
 # Comandos de instalação do Proxmox
 echo iniciando instalação do Proxmox
 
+# Obtendo o nome do host atual
+current_hostname=$(hostname)
+
 # Solicitar ao usuário o nome do host e o endereço IP
-read -p "Digite o nome do host: " hostname
-read -p "Digite o endereço IP: " ip_address
+ifconfig
+
+read -p "Digite o seu endereço de IP exemplo(192.168.): " ip_address
 
 # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
-if grep -q "$hostname" /etc/hosts; then
-    echo "O nome do host '$hostname' já está presente no arquivo /etc/hosts."
+if grep -q "$current_hostname" /etc/hosts; then
+    echo "O nome do host '$current_hostname' já está presente no arquivo /etc/hosts."
     exit 1
 fi
 
 # Adicionar a nova entrada ao arquivo /etc/hosts
-echo "$ip_address    $hostname" | sudo tee -a /etc/hosts > /dev/null
+echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | sudo tee -a /etc/hosts > /dev/null
 
 echo "Entrada adicionada com sucesso ao arquivo /etc/hosts:"
-cat /etc/hosts | grep "$hostname"
+cat /etc/hosts | grep "$current_hostname"
 
 # Substitua este comentário pelos comandos reais de instalação do Proxmox e outros pacotes
 
