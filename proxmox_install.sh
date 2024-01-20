@@ -3,8 +3,6 @@ current_user=$USER
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
     echo "Tornando-se superusuário..."
-    sudo -E bash $0
-    exit $?
 fi
 
 echo "Bem-vindo ao script de instalação do Proxmox no Debian 12 Bookworm"
