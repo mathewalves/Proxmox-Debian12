@@ -27,7 +27,7 @@ install_sudo()
             if [ -n "$current_user" ]; then
                 # Verifica se o usuário selecionado existe
                 if id "$current_user" >/dev/null 2>&1; then
-                    sed -i "/^sudo/s/$/,$current_user/" /etc/group
+                    sed -i "/^sudo/s/$/$current_user/" /etc/group
                     echo "Permissões de sudo atualizadas para o usuário $current_user."
                 else
                     echo "Usuário $current_user não encontrado."
@@ -279,6 +279,7 @@ main()
 
         # configure proxmox
         configure_proxmox
+        reboot_proxmox
     else 
     if [ "$resposta" != "pular" ]; then
         echo "Resposta inválida. Saindo do script."
@@ -286,6 +287,7 @@ main()
     fi
         echo "Pulando para outra parte do script..."
         configure_proxmox
+        reboot_proxmox
     fi
     
 }
