@@ -215,10 +215,10 @@ main()
 
     read -p "Deseja a instalar o sudo no debian? (Digite 'sim' para continuar): " resposta_sudo
     
-    if ["$resposta_sudo" == "sim"]; then
-        install_sudo
+    if ["$resposta_sudo" != "sim"]; then
+        echo -e "\e[1;91mContinuando a instalação sem o 'sudo'...\e[0m"
     else
-       echo "\e[1;91mContinuando a instalação sem o 'sudo'...\e[0m"
+       install_sudo
     fi
     
 
