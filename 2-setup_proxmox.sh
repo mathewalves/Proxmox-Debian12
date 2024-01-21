@@ -1,9 +1,13 @@
+#!/bin/bash
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
     echo -e "\e[1;92mTornando-se superusuário...\e[0m"
     sudo -E bash "$0" "$@"  # Executa o script como root
     exit $?
 fi
+
+echo "Script 2 iniciado em $(date)" >> /tmp/script2.log
+read ok
 
 # Remover o serviço do systemd
 remove_service() 
