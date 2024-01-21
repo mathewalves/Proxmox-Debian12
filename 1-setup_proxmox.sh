@@ -195,6 +195,8 @@ reboot_proxmox()
     echo "[Service]" >> "$SERVICE_PATH"
     echo "Type=simple" >> "$SERVICE_PATH"
     echo "ExecStart=/Proxmox-Debian12/2-setup_proxmox.sh" >> "$SERVICE_PATH"
+    echo "StandardOutput=tty" >> "$SERVICE_PATH"
+    echo "StandardError=tty" >> "$SERVICE_PATH"
     echo "" >> "$SERVICE_PATH"
     echo "[Install]" >> "$SERVICE_PATH"
     echo "WantedBy=getty.target" >> "$SERVICE_PATH"
