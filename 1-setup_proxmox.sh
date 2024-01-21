@@ -193,10 +193,11 @@ reboot_proxmox()
     echo "Description=Meu Serviço de Reinicialização para 2ª Parte do script" >> "$SERVICE_PATH"
     echo "" >> "$SERVICE_PATH"
     echo "[Service]" >> "$SERVICE_PATH"
+    echo "Type=simple" >> "$SERVICE_PATH"
     echo "ExecStart=/Proxmox-Debian12/2-setup_proxmox.sh" >> "$SERVICE_PATH"
     echo "" >> "$SERVICE_PATH"
     echo "[Install]" >> "$SERVICE_PATH"
-    echo "WantedBy=multi-user.target" >> "$SERVICE_PATH"
+    echo "WantedBy=getty.target" >> "$SERVICE_PATH"
 
     # Recarrega o daemon do systemd para reconhecer as alterações
     systemctl daemon-reload
