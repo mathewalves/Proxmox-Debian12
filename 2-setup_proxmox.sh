@@ -6,9 +6,6 @@ if [ "$(whoami)" != "root" ]; then
     exit $?
 fi
 
-echo "Script 2 iniciado em $(date)" >> /tmp/script2.log
-read ok
-
 # Remover o serviço do systemd
 remove_service() 
 {
@@ -28,10 +25,10 @@ proxmox-ve_packages()
 {
     if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
-        nala install proxmox-ve postfix open-iscsi chrony
+        nala install -y proxmox-ve postfix open-iscsi chrony
     else
         # Executar com 'apt' se 'nala' não estiver instalado
-        apt install proxmox-ve postfix open-iscsi chrony
+        apt install -y proxmox-ve postfix open-iscsi chrony
     fi
 }
 
@@ -40,10 +37,10 @@ remove_kernel()
 {
     if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
-        nala remove linux-image-amd64 'linux-image-6.1*'
+        nala remove -y linux-image-amd64 'linux-image-6.1*'
     else
         # Executar com 'apt' se 'nala' não estiver instalado
-        apt remove linux-image-amd64 'linux-image-6.1*'
+        apt remove -y linux-image-amd64 'linux-image-6.1*'
     fi
 
     update-grub
@@ -53,39 +50,27 @@ remove_os-prober()
 {
    if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
-        nala remove os-prober
+        nala remove -y os-prober
     else
         # Executar com 'apt' se 'nala' não estiver instalado
-        apt remove os-prober
+        apt remove -y os-prober
     fi 
-}
-
-conexao()
-{
-    ip_address=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' /etc/hosts | tail -n 1 | awk '{print $1}')
-
-    # Mensagem com ênfase no endereço IP
-    echo -e "Conecte-se à interface web do Proxmox VE"
-    echo -e "Conecte-se à interface web de administração (\e[1;34mhttps://${negrito}${verde}${ip_address}${normal}\e[0m:8006)."
-    echo -e "Se você fez uma instalação recente e ainda não adicionou nenhum usuário, você deve selecionar a autenticação PAM e fazer login com a conta de usuário root."
 }
 
 
 main()
 {
-    negrito=$(tput bold)
-    normal=$(tput sgr0)
-    verde=$(tput setaf 2)
-
     proxmox-ve_packages
     remove_kernel
     remove_os-prober
     remove_service
 
     # Mensagem de instalação concluída com cores e efeitos
-    echo -e "${negrito}${verde}Instalação concluída com sucesso!${normal}"
+    echo -e "Instalação concluída com sucesso!"
+    neofetch
 
-    conexao
+    remove_service
+    systemctl reboot
 }
 
 main
