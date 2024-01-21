@@ -16,7 +16,7 @@ install_sudo()
     echo "Selecione um usuário para adicionar permissões sudo:"
 
     # Lista todos os usuários do sistema com permissões de sudo
-    all_sudo_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1 | xargs -I{} id -nG {} | grep -w sudo | cut -d' ' -f1)
+    all_sudo_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1)
 
     # Pergunta ao usuário se deseja adicionar permissões de sudo
     PS3="Selecione um usuário para adicionar permissões de sudo ou pressione Enter para pular: "
