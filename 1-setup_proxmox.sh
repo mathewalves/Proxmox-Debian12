@@ -12,6 +12,7 @@ install_sudo()
 {
     echo -e "\e[1;32mIniciando instalação do sudo...\e[0m"
     apt-get install -y sudo
+    apt-get install -y passwd
 
     echo "Selecione um usuário para adicionar permissões sudo:"
 
