@@ -12,7 +12,6 @@ install_sudo()
 {
     echo -e "\e[1;32mIniciando instalação do sudo...\e[0m"
     apt-get install -y sudo
-    apt-get install -y passwd
 
     echo "Selecione um usuário para adicionar permissões sudo:"
 
@@ -27,7 +26,7 @@ install_sudo()
             if id "$novo_sudo_user" &>/dev/null && groups "$novo_sudo_user" | grep -qw sudo; then
                 echo "O usuário $novo_sudo_user já possui permissões de sudo. Nenhuma ação necessária."
             else
-                usermod -aG sudo "$novo_sudo_user"
+                sed -i "/^sudo/s/$/,$novo_sudo_user/" /etc/group
                 echo "Permissões de sudo atualizadas para o usuário $novo_sudo_user."
             fi
         else
