@@ -26,7 +26,7 @@ install_sudo()
             if id "$novo_sudo_user" &>/dev/null && groups "$novo_sudo_user" | grep -qw sudo; then
                 echo "O usuário $novo_sudo_user já possui permissões de sudo. Nenhuma ação necessária."
             else
-                sed -i "/^sudo/s/$/,$novo_sudo_user/" /etc/group
+                sed -i "/^sudo/s/$/$novo_sudo_user/" /etc/group
                 echo "Permissões de sudo atualizadas para o usuário $novo_sudo_user."
             fi
         else
