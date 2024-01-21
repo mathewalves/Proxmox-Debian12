@@ -15,31 +15,25 @@ install_sudo()
 
     echo "Selecione um usuário para adicionar permissões sudo:"
 
-    # Lista todos os usuários do sistema
-    all_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1)
+    # Lista todos os usuários do sistema com permissões de sudo
+    all_sudo_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1 | xargs -I{} id -nG {} | grep -w sudo | cut -d' ' -f1)
 
-    # Verifica se o usuário atual já tem permissões de sudo
-    if groups "$current_user" | grep &>/dev/null '\bsudo\b'; then
-        echo "O usuário $current_user já possui permissões de sudo. Pulando esta etapa."
-    else
-        # Pergunta ao usuário se deseja adicionar permissões de sudo
-        select current_user in $all_users; do
-            if [ -n "$current_user" ]; then
-                # Verifica se o usuário selecionado existe
-                if id "$current_user" >/dev/null 2>&1; then
-                    sed -i "/^sudo/s/$/$current_user/" /etc/group
-                    echo "Permissões de sudo atualizadas para o usuário $current_user."
-                else
-                    echo "Usuário $current_user não encontrado."
-                fi
-                break
+    # Pergunta ao usuário se deseja adicionar permissões de sudo
+    PS3="Selecione um usuário para adicionar permissões de sudo ou pressione Enter para pular: "
+    select novo_sudo_user in "${all_sudo_users[@]}" "Pular"; do
+        if [[ -n "$novo_sudo_user" ]]; then
+            # Verifica se o usuário selecionado já tem permissões de sudo
+            if id "$novo_sudo_user" &>/dev/null && groups "$novo_sudo_user" | grep -qw sudo; then
+                echo "O usuário $novo_sudo_user já possui permissões de sudo. Nenhuma ação necessária."
             else
-                echo "Opção inválida. Tente novamente."
+                usermod -aG sudo "$novo_sudo_user"
+                echo "Permissões de sudo atualizadas para o usuário $novo_sudo_user."
             fi
-        done
-    fi
-
-    su - "$current_user" -c "bash -c 'id;'"  # Comando dummy para efetuar login e atualizar as permissões
+        else
+            echo "Permissões de sudo não foram alteradas."
+        fi
+        break
+    done
 }
 
 
