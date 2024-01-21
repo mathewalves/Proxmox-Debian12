@@ -168,9 +168,9 @@ configure_proxmox()
     echo "Baixando o Proxmox VE Kernel."
 
     if [ "$resposta_nala" == "sim" ]; then
-        nala install proxmox-default-kernel
+        nala install -y proxmox-default-kernel
     else
-        apt install proxmox-default-kernel
+        apt install -y proxmox-default-kernel
     fi
 
     if [ "$resposta_neofetch" == "sim" ]; then
@@ -186,6 +186,8 @@ reboot_proxmox()
 
     # Exibe mensagem de aviso sobre a reinicialização
     echo -e "\e[1;91mAVISO: O sistema será reiniciado. Salvando trabalho...\e[0m"
+
+    chmod +x ./2-setup_proxmox.sh
 
     # Cria o arquivo de serviço para a 2ª Parte
     SERVICE_PATH="/etc/systemd/system/meuservico.service"

@@ -77,10 +77,10 @@ main()
     normal=$(tput sgr0)
     verde=$(tput setaf 2)
 
-    remove_service
     proxmox-ve_packages
     remove_kernel
     remove_os-prober
+    remove_service
 
     # Mensagem de instalação concluída com cores e efeitos
     echo -e "${negrito}${verde}Instalação concluída com sucesso!${normal}"
