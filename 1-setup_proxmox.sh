@@ -107,7 +107,7 @@ configure_proxmox()
     # Comandos de instalação do Proxmox
     echo "iniciando instalação do Proxmox"
     echo "..."
-    echo "1ºParte: Passo 1/3"
+    echo -e "\e[1;36m1º parte: Passo 1/3\e[0m"
     echo "Adicionando uma entrada em /etc/hosts para seu endereço ip."
 
     # Obtendo o nome do host atual
@@ -143,7 +143,7 @@ configure_proxmox()
     hostname --ip-address
 
     echo "..."
-    echo "1ºParte: Passo 2/3"
+     echo -e "\e[1;36m1º parte: Passo 2/3\e[0m"
     echo "Adicionando o repositório do Proxmox VE."
 
     echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
@@ -170,7 +170,7 @@ configure_proxmox()
     fi
 
     echo "..."
-    echo -e "\e[1;36m1º parte: Passo 3/3\e[1;0m"
+    echo -e "\e[1;36m1º parte: Passo 3/3\e[0m"
     echo "Baixando o Proxmox VE Kernel."
 
     if [ "$resposta_nala" == "sim" ]; then
@@ -183,16 +183,18 @@ configure_proxmox()
         neofetch
     fi
 
-    echo -e "\e[1;32mInstalação da 1ºParte concluída com sucesso!"
-    echo "Lembre-se de executar a segunda parte e configurar o Proxmox conforme necessário após a instalação."
+    echo -e "\e[1;32mInstalação da 1ºParte concluída com sucesso!\e[0m"
+    echo -e "\e[1;93Lembre-se de executar a segunda parte e configurar o Proxmox conforme necessário após a instalação.\e[0m"
 
     # Exibe mensagem de aviso sobre a reinicialização
-    echo -e "\e[1;91mAVISO: O sistema será reiniciado. Salvando trabalho..."
+    echo -e "\e[1;91mAVISO: O sistema será reiniciado. Salvando trabalho...\e[0m"
 
     # Agendando a execução do restante do script após o reboot
-    echo -e "\e[1;93m(sleep 5 && /Proxmox-Debian12/2-setup_proxmox.sh) | at now + 1 minute"
+    eval "(sleep 5 && /Proxmox-Debian12/2-setup_proxmox.sh) | at now + 1 minute"
 
-    echo "\e[1;32mTrabalho Salvo! Aperte 'Enter' Para reiniciar agora ou 'Ctrl+C' para continuar usando o computador..."
+    echo -e "\e[1;32mTrabalho Salvo!\e[1;0m" 
+    echo "Aperte 'Enter' Para reiniciar agora ou 'Ctrl+C' para continuar usando o computador..."
+    echo "..."
     read ok
 
     # Reinicia o sistema
