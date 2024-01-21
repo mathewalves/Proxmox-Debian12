@@ -2,15 +2,15 @@
 
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
-    echo "Tornando-se superusuário..."
+    echo -e "\e[1;92mTornando-se superusuário...\e[0m"
     sudo -E bash "$0" "$@"  # Executa o script como root
     exit $?
 fi
 
 # Função para instalar sudo
-install_sudo()
+install_sudo() 
 {
-    echo "Iniciando instalação do sudo..."
+    echo -e "\e[1;32mIniciando instalação do sudo...\e[0m"
     apt-get install -y sudo
 
     echo "Selecione um usuário para adicionar permissões sudo:"
@@ -18,46 +18,49 @@ install_sudo()
     # Lista todos os usuários do sistema
     all_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1)
 
-    # Mostra uma lista numerada de usuários
-    select current_user in $all_users; do
-        if [ -n "$current_user" ]; then
-            # Verifica se o usuário selecionado existe
-            if id "$current_user" >/dev/null 2>&1; then
-                sed -i "/^sudo/s/$/,$current_user/" /etc/group
-                echo "Permissões de sudo atualizadas para o usuário $current_user."
+    # Verifica se o usuário atual já tem permissões de sudo
+    if groups "$current_user" | grep &>/dev/null '\bsudo\b'; then
+        echo "O usuário $current_user já possui permissões de sudo. Pulando esta etapa."
+    else
+        # Pergunta ao usuário se deseja adicionar permissões de sudo
+        select current_user in $all_users; do
+            if [ -n "$current_user" ]; then
+                # Verifica se o usuário selecionado existe
+                if id "$current_user" >/dev/null 2>&1; then
+                    sed -i "/^sudo/s/$/,$current_user/" /etc/group
+                    echo "Permissões de sudo atualizadas para o usuário $current_user."
+                else
+                    echo "Usuário $current_user não encontrado."
+                fi
+                break
             else
-                echo "Usuário $current_user não encontrado."
+                echo "Opção inválida. Tente novamente."
             fi
-            break
-        else
-            echo "Opção inválida. Tente novamente."
-        fi
-    done
-
-    # Se o usuário atual foi modificado, atualiza as permissões imediatamente
-    if [ "$resposta" == "sim" ]; then
-        su - "$current_user" -c "bash -c 'id;'"  # Comando dummy para efetuar login e atualizar as permissões
+        done
     fi
+
+    su - "$current_user" -c "bash -c 'id;'"  # Comando dummy para efetuar login e atualizar as permissões
 }
+
 
 # Função para instalar o nala
 install_nala() 
 {
-
-    echo "Iniciando a instalação do 'nala'..."
+    echo -e "\e[1;36mIniciando a instalação do 'nala'...\e[0m"
     apt install -y nala
     echo "'nala' instalado com sucesso."
 }
+
 
 # Função para instalar o neofetch
 install_neofetch() 
 {
     if [ "$resposta_nala" == "sim" ]; then
-        echo "Iniciando a instalação do 'neofetch' com o nala..."
+        echo -e "\e[1;36mIniciando a instalação do 'neofetch' com o nala...\e[0m"
         nala install -y neofetch
         echo "'neofetch' instalado com sucesso."
     else
-        echo "Iniciando a instalação do 'neofetch' com o apt..."
+        echo -e "\e[1;36mIniciando a instalação do 'neofetch' com o apt...\e[0m"
         apt install -y neofetch
         echo "'neofetch' instalado com sucesso."
     fi
@@ -66,13 +69,12 @@ install_neofetch()
 # Função para instalar ferramentas de rede
 install_network_tools() 
 {
-
     if [ "$resposta_nala" == "sim" ]; then
-        echo "Iniciando a instalação do 'net-tools' & 'nmap' com o nala..."
+        echo -e "\e[1;36mIniciando a instalação do 'net-tools' & 'nmap' com o nala...\e[0m"
         nala install -y nmap && nala install -y net-tools
         echo "Pacotes instalados com sucesso."
     else
-        echo "Iniciando a instalação do 'net-tools' & 'nmap' com o apt..."
+        echo -e "\e[1;36mIniciando a instalação do 'net-tools' & 'nmap' com o apt...\e[0m"
         apt install -y nmap && apt install -y net-tools
         echo "Pacotes instalados com sucesso."
     fi
@@ -81,7 +83,7 @@ install_network_tools()
 # Função para atualizar o sistema
 update_system() 
 {
-    echo "Atualizando o sistema..."
+    echo -e "\e[1;36mAtualizando o sistema...\e[0m"
     if [ "$resposta_nala" == "sim" ]; then
         nala update && nala upgrade
     else
@@ -100,12 +102,12 @@ configure_proxmox()
         exit 1
     fi
 
-    echo "Bem-vindo ao script de instalação do Proxmox no Debian 12 Bookworm"
+    echo -e "\e[1;36mBem-vindo ao script de instalação do Proxmox no Debian 12 Bookworm\e[0m"
 
     # Comandos de instalação do Proxmox
     echo "iniciando instalação do Proxmox"
     echo "..."
-    echo "Passo 1/4"
+    echo "1ºParte: Passo 1/3"
     echo "Adicionando uma entrada em /etc/hosts para seu endereço ip."
 
     # Obtendo o nome do host atual
@@ -141,7 +143,7 @@ configure_proxmox()
     hostname --ip-address
 
     echo "..."
-    echo "Passo 2/4"
+    echo "1ºParte: Passo 2/3"
     echo "Adicionando o repositório do Proxmox VE."
 
     echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
@@ -168,8 +170,8 @@ configure_proxmox()
     fi
 
     echo "..."
-    echo "Passo 3/4"
-    echo "Install the Proxmox VE Kernel."
+    echo -e "\e[1;36m1º parte: Passo 3/3\e[1;0m"
+    echo "Baixando o Proxmox VE Kernel."
 
     if [ "$resposta_nala" == "sim" ]; then
         nala install proxmox-default-kernel
@@ -177,14 +179,21 @@ configure_proxmox()
         apt install proxmox-default-kernel
     fi
 
-    echo "Instalação concluída com sucesso!"
-    echo "Lembre-se de configurar o Proxmox conforme necessário após a instalação."
+    if [ "$resposta_neofetch" == "sim" ]; then
+        neofetch
+    fi
+
+    echo -e "\e[1;32mInstalação da 1ºParte concluída com sucesso!"
+    echo "Lembre-se de executar a segunda parte e configurar o Proxmox conforme necessário após a instalação."
 
     # Exibe mensagem de aviso sobre a reinicialização
-    echo "AVISO: O sistema será reiniciado. Salvando trabalho..."
+    echo -e "\e[1;91mAVISO: O sistema será reiniciado. Salvando trabalho..."
 
     # Agendando a execução do restante do script após o reboot
-    echo "(sleep 5 && /Proxmox-Debian12/2-setup_proxmox.sh) | at now + 1 minute"
+    echo -e "\e[1;93m(sleep 5 && /Proxmox-Debian12/2-setup_proxmox.sh) | at now + 1 minute"
+
+    echo "\e[1;32mTrabalho Salvo! Aperte 'Enter' Para reiniciar agora ou 'Ctrl+C' para continuar usando o computador..."
+    read ok
 
     # Reinicia o sistema
     systemctl reboot
@@ -194,13 +203,22 @@ configure_proxmox()
 
 main()
 {
-    echo "Este script instalará no seu Debian o 'sudo' e perguntará se você deseja instalar alguns pacotes adicionais, 
-    como 'nala', 'neofetch' e pacotes de ferramentas de rede: 'net-tools' e 'nmap'."
+    echo -e "\e[1;36m            ~ Bem-vindo ao Script de Instalação do Proxmox no Debian 12 ~ \e[0m"
+    echo -e "\e[1;34mEste script instalará no seu Debian 12 o ProxMox e perguntará se você deseja instalar alguns pacotes adicionais,"
+    echo -e "como 'sudo', 'nala', 'neofetch' e pacotes de ferramentas de rede como o 'net-tools' e 'nmap'.\e[0m"
+    echo -e "\e[1;93mScript feito por https://github.com/mathewalves.\e[0m"
 
+    echo -e "\e[1;93mAperte 'Enter' para continuar...\e[0m" 
     read ok
 
-    # Instalar sudo
-    install_sudo
+    echo -e "\e[1;93mDeseja a instalar o sudo no debian? (Digite 'sim' para continuar): \e[0m" 
+    read resposta_sudo
+    if ["$resposta_sudo" == "sim"]; then
+        install_sudo
+    else
+       echo "\e[1;91mContinuando a instalação sem o 'sudo'...\e[0m"
+    fi
+    
 
     read -p "Deseja iniciar a instalação dos pacotes adicionais? (Digite 'sim' para continuar, 'pular' para pular): " resposta
 
