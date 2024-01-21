@@ -19,7 +19,7 @@ install_sudo()
     all_sudo_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1)
 
     # Pergunta ao usuário se deseja adicionar permissões de sudo
-    PS3="Selecione um usuário para adicionar permissões de sudo ou digite pular para pular: "
+    PS3="Selecione um usuário para adicionar permissões de sudo ou digite 'pular' para pular: "
     select novo_sudo_user in $all_sudo_users; do
         if [[ -n "$novo_sudo_user" ]]; then
             # Verifica se o usuário selecionado já tem permissões de sudo
