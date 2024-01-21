@@ -183,21 +183,45 @@ configure_proxmox()
         neofetch
     fi
 
-    echo -e "\e[1;32mInstalação da 1ºParte concluída com sucesso!\e[0m"
-    echo -e "\e[1;93Lembre-se de executar a segunda parte e configurar o Proxmox conforme necessário após a instalação.\e[0m"
+    echo -e "\e[1;32mInstalação da 1ºParte do ProxMox concluída com sucesso!\e[0m"
+}
+
+reboot_proxmox()
+{
+    echo -e "\e[1;93Executando 2ºParte da instalação do ProxMox.\e[0m"
 
     # Exibe mensagem de aviso sobre a reinicialização
     echo -e "\e[1;91mAVISO: O sistema será reiniciado. Salvando trabalho...\e[0m"
 
     # Agendando a execução do restante do script após o reboot
-    eval "(sleep 5 && /Proxmox-Debian12/2-setup_proxmox.sh) | at now + 1 minute"
+    SERVICO_PATH="/etc/systemd/system/meuservico.service"
+    echo "[Unit]" > "$SERVICO_PATH"
+    echo "Description=Meu Serviço de Reinicialização" >> "$SERVICO_PATH"
+    echo "" >> "$SERVICO_PATH"
+    echo "[Service]" >> "$SERVICO_PATH"
+    echo "ExecStart=$(readlink -f "$0")" >> "$SERVICO_PATH"
+    echo "ExecStartPost=/Proxmox-Debian12/2-setup_proxmox.sh" >> "$SERVICO_PATH"  # Adição para executar o segundo script após o reboot
+    echo "" >> "$SERVICO_PATH"
+    echo "[Install]" >> "$SERVICO_PATH"
+    echo "WantedBy=default.target" >> "$SERVICO_PATH"
 
-    echo -e "\e[1;32mTrabalho Salvo!\e[1;0m" 
-    echo "Aperte 'Enter' Para reiniciar agora ou 'Ctrl+C' para continuar usando o computador..."
+    # Recarregar o daemon do systemd para reconhecer as alterações
+    systemctl daemon-reload
+
+    # Habilitar e iniciar o serviço
+    systemctl enable meuservico.service
+    systemctl start meuservico.service
+
+    echo -e "\e[1;32mTrabalho Salvo!\e[1;0m"
+
+    echo "Aperte 'Enter' Para reiniciar agora e executar a 2ªParte do script junto com o boot do sistema"
+    echo "ou aperte 'Ctrl+C' para continuar usando o computador..."
+    echo "Lembre-se: se cancelar o reboot agora você terá que iniciar a 2ªParte do script manualmente."
     echo "..."
     read ok
 
     # Reinicia o sistema
+    echo -e "\e[1;91mReiniciando o Sistema...\e[0m"
     systemctl reboot
 }
 
