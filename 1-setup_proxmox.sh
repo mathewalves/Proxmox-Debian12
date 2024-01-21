@@ -182,40 +182,35 @@ configure_proxmox()
 
 reboot_proxmox()
 {
-    echo -e "\e[1;93Executando 2ºParte da instalação do ProxMox.\e[0m"
+    echo -e "\e[1;93mExecutando 2º Parte da instalação do ProxMox.\e[0m"
 
     # Exibe mensagem de aviso sobre a reinicialização
     echo -e "\e[1;91mAVISO: O sistema será reiniciado. Salvando trabalho...\e[0m"
 
-    # Agendando a execução do restante do script após o reboot
-    SERVICO_PATH="/etc/systemd/system/meuservico.service"
-    echo "[Unit]" > "$SERVICO_PATH"
-    echo "Description=Meu Serviço de Reinicialização" >> "$SERVICO_PATH"
-    echo "" >> "$SERVICO_PATH"
-    echo "[Service]" >> "$SERVICO_PATH"
-    echo "ExecStart=$(readlink -f "$0")" >> "$SERVICO_PATH"
-    echo "ExecStartPost=/Proxmox-Debian12/2-setup_proxmox.sh" >> "$SERVICO_PATH"  # Adição para executar o segundo script após o reboot
-    echo "" >> "$SERVICO_PATH"
-    echo "[Install]" >> "$SERVICO_PATH"
-    echo "WantedBy=default.target" >> "$SERVICO_PATH"
+    # Cria o arquivo de serviço para a 2ª Parte
+    SERVICE_PATH="/etc/systemd/system/meuservico.service"
+    echo "[Unit]" > "$SERVICE_PATH"
+    echo "Description=Meu Serviço de Reinicialização para 2ª Parte do script" >> "$SERVICE_PATH"
+    echo "" >> "$SERVICE_PATH"
+    echo "[Service]" >> "$SERVICE_PATH"
+    echo "ExecStart=/Proxmox-Debian12/2-setup_proxmox.sh" >> "$SERVICE_PATH"
+    echo "" >> "$SERVICE_PATH"
+    echo "[Install]" >> "$SERVICE_PATH"
+    echo "WantedBy=multi-user.target" >> "$SERVICE_PATH"
 
-    # Recarregar o daemon do systemd para reconhecer as alterações
+    # Recarrega o daemon do systemd para reconhecer as alterações
     systemctl daemon-reload
 
-    # Habilitar e iniciar o serviço
+    # Habilita o serviço para iniciar na inicialização
     systemctl enable meuservico.service
-    systemctl start meuservico.service
 
-    echo -e "\e[1;32mTrabalho Salvo!\e[1;0m"
+    echo -e "\e[1;32mTrabalho Salvo!\e[0m"
+    echo "O sistema será reiniciado automaticamente para concluir a instalação."
 
-    echo "Aperte 'Enter' Para reiniciar agora e executar a 2ªParte do script junto com o boot do sistema"
-    echo "ou aperte 'Ctrl+C' para continuar usando o computador..."
-    echo "Lembre-se: se cancelar o reboot agora você terá que iniciar a 2ªParte do script manualmente."
-    echo "..."
-    read ok
+    # Aguarda alguns segundos antes de reiniciar
+    sleep 5
 
     # Reinicia o sistema
-    echo -e "\e[1;91mReiniciando o Sistema...\e[0m"
     systemctl reboot
 }
 
