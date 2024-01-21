@@ -10,17 +10,21 @@ fi
 remove_service() 
 {
     for user_home in /home/*; do
-        PROFILE_FILE="$user_home/.bashrc"  # Pode ser alterado para ~/.bash_profile se preferir
+        PROFILE_FILE="$user_home/.bashrc"
+        
+        # Remover a linha do script do arquivo de perfil
+        sed -i '/# Executar script após o login/,/# Fim do script 2/d' "$PROFILE_FILE"
+        echo "Removida a configuração do perfil para o usuário: $(basename "$user_home")."
 
-        if [ -f "$PROFILE_FILE" ]; then
-            sed -i '/2-setup_proxmox.sh/d' "$PROFILE_FILE"
-            echo "Removida a execução deste script do perfil do usuário: $(basename "$user_home")."
-        fi
+        # Remover a entrada do sudoers
+        sed -i "/$(basename "$user_home") ALL=(ALL:ALL) NOPASSWD: \/Proxmox-Debian12\/2-setup_proxmox.sh/d" /etc/sudoers.d/proxmox_setup
+        echo "Removida a configuração do sudoers para o usuário: $(basename "$user_home")."
     done
 }
 
 proxmox-ve_packages()
 {
+    echo -e "\e[1;36m1º parte: Passo 1/3\e[0m"
     if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala install -y proxmox-ve postfix open-iscsi chrony
@@ -33,6 +37,7 @@ proxmox-ve_packages()
 # Remover kernel do Debian
 remove_kernel()
 {
+    echo -e "\e[1;36m2º parte: Passo 2/3\e[0m"
     if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala remove -y linux-image-amd64 'linux-image-6.1*'
@@ -46,6 +51,7 @@ remove_kernel()
 
 remove_os-prober()
 {
+    echo -e "\e[1;36m2º parte: Passo 3/3\e[0m"
    if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala remove -y os-prober
@@ -58,6 +64,7 @@ remove_os-prober()
 
 main()
 {
+    echo -e "\e[1;93m2º Parte da instalação do ProxMox executado com sucesso.\e[0m"
     proxmox-ve_packages
     remove_kernel
     remove_os-prober
@@ -67,6 +74,11 @@ main()
     neofetch
 
     remove_service
+
+    echo -e "\e[1;32mInstalação do Proxmox concluída com sucesso!\e[0m"
+    echo -e "\e[1;91mAVISO: O sistema será reiniciado automaticamente para concluir a instalação.\e[0m"
+    sleep 5
+
     systemctl reboot
 }
 

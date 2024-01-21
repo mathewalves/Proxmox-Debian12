@@ -52,11 +52,11 @@ install_neofetch()
     if [ "$resposta_nala" == "sim" ]; then
         echo -e "\e[1;36mIniciando a instalação do 'neofetch' com o nala...\e[0m"
         nala install -y neofetch
-        echo "'neofetch' instalado com sucesso."
+        echo -e "\e[1;32m'neofetch' instalado com sucesso!\e[0m"
     else
         echo -e "\e[1;36mIniciando a instalação do 'neofetch' com o apt...\e[0m"
         apt install -y neofetch
-        echo "'neofetch' instalado com sucesso."
+        echo -e "\e[1;32m'neofetch' instalado com sucesso!\e[0m"
     fi
 }
 
@@ -66,11 +66,11 @@ install_network_tools()
     if [ "$resposta_nala" == "sim" ]; then
         echo -e "\e[1;36mIniciando a instalação do 'net-tools' & 'nmap' com o nala...\e[0m"
         nala install -y nmap && nala install -y net-tools
-        echo "Pacotes instalados com sucesso."
+        echo -e "\e[1;32mPacotes instalados com sucesso!\e[0m"
     else
         echo -e "\e[1;36mIniciando a instalação do 'net-tools' & 'nmap' com o apt...\e[0m"
         apt install -y nmap && apt install -y net-tools
-        echo "Pacotes instalados com sucesso."
+        echo -e "\e[1;32mPacotes instalados com sucesso!\e[0m"
     fi
 }
 
@@ -83,7 +83,7 @@ update_system()
     else
         apt-get update && apt-get upgrade
     fi
-    echo "Atualização instalada com sucesso."
+    echo -e "\e[1;32mAtualização feita com sucesso!\e[0m"
 }
 
 ## Função para configurar o Proxmox
@@ -97,6 +97,7 @@ configure_proxmox()
     fi
 
     echo -e "\e[1;36mBem-vindo ao script de instalação do Proxmox no Debian 12 Bookworm\e[0m"
+    echo -e "\e[1;91mAVISO: Durante a instalação, o sistema pode reiniciar várias vezes. Evite Fechar o Script durante a instalação!\e[0m"
 
     # Comandos de instalação do Proxmox
     echo "iniciando instalação do Proxmox"
@@ -110,12 +111,13 @@ configure_proxmox()
     echo "Seu hostname:"
     hostname
 
-    # Exibir interfaces de rede
-    echo "Suas interfaces de rede"
+    # Exibindo interfaces de rede
+    echo -e "\e[1;36mSuas interfaces de rede:\e[0m"
     ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1]}'
 
-    # Solicitar o endereço IP
-    read -p "Digite o seu endereço de IP da interface correta. exemplo: (192.168.0.113): " ip_address
+    # Solicitando o endereço IP
+    echo -e "\e[1;32mDigite o endereço de IP da interface correta (exemplo: 192.168.0.113): \e[0m"
+    read -p "Resposta: " ip_address
 
     # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
     if grep -q "$current_hostname" /etc/hosts; then
@@ -185,29 +187,33 @@ reboot_proxmox()
     echo -e "\e[1;93mExecutando 2º Parte da instalação do ProxMox.\e[0m"
 
     # Exibe mensagem de aviso sobre a reinicialização
-    echo -e "\e[1;91mAVISO: O sistema será reiniciado. Salvando trabalho...\e[0m"
+    echo -e "\e[1;91mAVISO: O sistema precisará ser reiniciado. Salvando trabalho...\e[0m"
 
     chmod +x ./2-setup_proxmox.sh
 
     for user_home in /home/*; do
-    PROFILE_FILE="$user_home/.bashrc"
-    
-    # Verifica se o arquivo de perfil existe antes de adicionar
-    if [ -f "$PROFILE_FILE" ]; then
-        # Adiciona a linha de execução do script ao final do arquivo
-        echo "" >> "$PROFILE_FILE"
-        echo "# Executar script após o login" >> "$PROFILE_FILE"
-        echo "/Proxmox-Debian12/2-setup_proxmox.sh" >> "$PROFILE_FILE"
-        echo "" >> "$PROFILE_FILE"
+        PROFILE_FILE="$user_home/.bashrc"
+        
+        # Verifica se o arquivo de perfil existe antes de adicionar
+        if [ -f "$PROFILE_FILE" ]; then
+            # Adiciona a linha de execução do script ao final do arquivo
+            echo "" >> "$PROFILE_FILE"
+            echo "# Executar script após o login" >> "$PROFILE_FILE"
+            echo "/Proxmox-Debian12/2-setup_proxmox.sh" >> "$PROFILE_FILE"
+            echo "" >> "$PROFILE_FILE"
 
-        echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
-    fi
+            echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
+        fi
+
+        # Adiciona a execução do script ao sudoers
+        echo "$(basename "$user_home") ALL=(ALL:ALL) NOPASSWD: /Proxmox-Debian12/2-setup_proxmox.sh" >> /etc/sudoers.d/proxmox_setup
+        echo "Configuração do sudoers concluída para o usuário: $(basename "$user_home")."
     done
 
     # Habilita o serviço para iniciar na inicialização
 
     echo -e "\e[1;32mTrabalho Salvo!\e[0m"
-    echo "O sistema será reiniciado automaticamente para concluir a instalação."
+    echo -e "\e[1;91mO sistema será reiniciado automaticamente para concluir a instalação.\e[0m"
 
     # Aguarda alguns segundos antes de reiniciar
     sleep 5
@@ -220,15 +226,32 @@ reboot_proxmox()
 
 main()
 {
-    echo -e "\e[1;36m            ~ Bem-vindo ao Script de Instalação do Proxmox no Debian 12 ~ \e[0m"
-    echo -e "\e[1;34mEste script instalará no seu Debian 12 o ProxMox e perguntará se você deseja instalar alguns pacotes adicionais,"
-    echo -e "como 'sudo', 'nala', 'neofetch' e pacotes de ferramentas de rede como o 'net-tools' e 'nmap'.\e[0m"
-    echo -e "\e[1;93mScript feito por https://github.com/mathewalves.\e[0m"
+     # emoji ASCII
+    echo -e "\e[1;96m"    
+    echo -e "\e[1;96m                                                                  _       _   "
+    echo -e "\e[1;96m  _ __  _ __ _____  ___ __ ___   _____  __          ___  ___ _ __(_)_ __ | |_ "
+    echo -e "\e[1;96m | '_ \| '__/ _ \ \/ / '_ \` _ \ / _ \ \/ /         / __|/ __| '__| | '_ \| __|"
+    echo -e "\e[1;96m | |_) | | | (_) >  <| | | | | | (_) >  <          \__ \ (__| |  | | |_) | |_ "
+    echo -e "\e[1;96m | .__/|_|  \___/_/\_\_| |_| |_|\___/_/\_\  _____  |___/\___|_|  |_| .__/ \__|"
+    echo -e "\e[1;96m |_|                                       |_____|                 |_|"  
+    echo -e "\e[0m"   
 
-    echo -e "\e[1;93mAperte 'Enter' para continuar...\e[0m" 
+    # Bem-vindo com estilo
+    echo -e "\e[1;96m            Script desenvolvido por: \e[1;92mhttps://github.com/mathewalves\e[0m."
+    echo ""
+    echo ""
+    echo -e "\e[1;96m --> Bem-vindo ao Script de Instalação do Proxmox no Debian 12 ~~\e[0m"
+    echo -e "\e[;94m Este script instalará o Proxmox no seu Debian 12 e oferecerá a opção de instalar alguns pacotes adicionais,\e[0m"
+    echo -e "\e[;94m como 'sudo', 'nala', 'neofetch', e ferramentas de rede como 'net-tools' e 'nmap'.\e[0m"
+    echo ""
+    # Adicionando mensagem sobre reinicialização
+    echo -e "\e[1;91mAVISO: Durante a instalação, o sistema pode reiniciar várias vezes. Evite Fechar o Script durante a instalação!\e[0m"
+    echo -e "\e[1;93mPor favor, esteja ciente disso. Aperte 'Enter' para continuar...\e[0m" 
     read ok
 
-    read -p "Deseja a instalar o sudo no debian? (Digite 'sim' para continuar): " resposta_sudo
+    echo -e "\e[1;32mDeseja instalar o sudo no Debian? (Digite 'sim' para continuar)\e[0m"
+    read -p "Resposta: " resposta_sudo
+    echo -e "\e[0m"
     
     if ["$resposta_sudo" != "sim"]; then
         echo -e "\e[1;91mContinuando a instalação sem o 'sudo'...\e[0m"
@@ -236,33 +259,43 @@ main()
        install_sudo
     fi
     
-
-    read -p "Deseja iniciar a instalação dos pacotes adicionais? (Digite 'sim' para continuar, 'pular' para pular): " resposta
+    echo -e "\e[1;32mDeseja iniciar a instalação dos pacotes adicionais? (Digite 'sim' para continuar, 'pular' para pular):\e[0m"
+    read -p "Resposta:  " resposta
+    echo -e "\e[0m"
 
     if [ "$resposta" == "sim" ]; then
 
         # Perguntar nala
-        read -p "Deseja instalar o 'nala'? (Opcional) (Digite 'sim' para instalar): " resposta_nala
+        echo -e "\e[1;32mDeseja instalar o 'nala'? (Opcional) (Digite 'sim' para instalar): \e[0m"
+        read -p "Resposta: " resposta_nala
+        echo -e "\e[0m"
+
         if [ "$resposta_nala" == "sim" ]; then
             install_nala
         else
-            echo "Continuando a instalação sem 'nala'..."
+            echo -e "\e[1;91mContinuando a instalação sem 'nala'...\e[0m"
         fi
 
         # Perguntar neofetch
-        read -p "Deseja instalar o 'neofetch'? (Opcional) (Digite 'sim' para instalar): " resposta_neofetch
+        echo -e "\e[1;32mDeseja instalar o 'neofetch'? (Opcional) (Digite 'sim' para instalar):  \e[0m"
+        read -p "Resposta: " resposta_neofetch
+        echo -e "\e[0m"
+
         if [ "$resposta_neofetch" == "sim" ]; then
             install_neofetch
         else
-            echo "Continuando a instalação sem 'neofetch'..."
+            echo -e "\e[1;91mContinuando a instalação sem 'neofetch'...\e[0m"
         fi
 
         # Perguntar ferramentas de rede
-        read -p "Deseja instalar as ferramentas de rede 'net-tools' e 'nmap'? (Opcional) (Digite 'sim' para instalar): " resposta_net
+        echo -e "\e[1;32mDeseja instalar as ferramentas de rede 'net-tools' e 'nmap'? (Opcional) (Digite 'sim' para instalar): \e[0m"
+        read -p "Resposta: " resposta_net
+        echo -e "\e[0m"
+
         if [ "$resposta_net" == "sim" ]; then
             install_network_tools
         else
-            echo "Continuando a instalação sem as ferramentas de rede..."
+            echo -e "\e[1;91mContinuando a instalação sem as ferramentas de rede...\e[0m"
         fi
 
         # Atualizar sistema
@@ -273,10 +306,10 @@ main()
         reboot_proxmox
     else 
     if [ "$resposta" != "pular" ]; then
-        echo "Resposta inválida. Saindo do script."
+        echo -e "\e[1;91mResposta inválida. Saindo do script.\e[0m"
         exit 1
     fi
-        echo "Pulando para outra parte do script..."
+        echo -e "\e[1;91mPulando para outra parte do script...\e[0m"
         configure_proxmox
         reboot_proxmox
     fi
