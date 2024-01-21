@@ -214,7 +214,7 @@ main()
     read ok
 
     echo -e "\e[1;93mDeseja a instalar o sudo no debian? (Digite 'sim' para continuar): \e[0m" 
-    read -p resposta_sudo
+    read -p ":" resposta_sudo
     if ["$resposta_sudo" == "sim"]; then
         install_sudo
     else
