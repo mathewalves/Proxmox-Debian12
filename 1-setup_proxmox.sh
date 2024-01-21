@@ -20,7 +20,7 @@ install_sudo()
 
     # Pergunta ao usuário se deseja adicionar permissões de sudo
     PS3="Selecione um usuário para adicionar permissões de sudo ou pressione Enter para pular: "
-    select novo_sudo_user in "${all_sudo_users[@]}" "Pular"; do
+    select novo_sudo_user in all_sudo_users; do
         if [[ -n "$novo_sudo_user" ]]; then
             # Verifica se o usuário selecionado já tem permissões de sudo
             if id "$novo_sudo_user" &>/dev/null && groups "$novo_sudo_user" | grep -qw sudo; then
