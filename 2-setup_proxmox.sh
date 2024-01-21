@@ -9,16 +9,14 @@ fi
 # Remover o serviço do systemd
 remove_service() 
 {
-    # Verificar se o serviço existe antes de tentar removê-lo
-    if systemctl is-active --quiet meuservico.service; then
-        systemctl stop meuservico.service
-        systemctl disable meuservico.service
-        rm /etc/systemd/system/meuservico.service
-        systemctl daemon-reload
-        echo "Serviço de agendamento de inicialização da 2ªParte do Script removida com Sucesso."
-    else
-        echo "Nenhum serviço de agendamento está ativo. Nenhuma ação necessária."
-    fi
+    for user_home in /home/*; do
+        PROFILE_FILE="$user_home/.bashrc"  # Pode ser alterado para ~/.bash_profile se preferir
+
+        if [ -f "$PROFILE_FILE" ]; then
+            sed -i '/2-setup_proxmox.sh/d' "$PROFILE_FILE"
+            echo "Removida a execução deste script do perfil do usuário: $(basename "$user_home")."
+        fi
+    done
 }
 
 proxmox-ve_packages()
@@ -63,7 +61,6 @@ main()
     proxmox-ve_packages
     remove_kernel
     remove_os-prober
-    remove_service
 
     # Mensagem de instalação concluída com cores e efeitos
     echo -e "Instalação concluída com sucesso!"

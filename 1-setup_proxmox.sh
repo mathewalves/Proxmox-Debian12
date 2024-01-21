@@ -189,25 +189,22 @@ reboot_proxmox()
 
     chmod +x ./2-setup_proxmox.sh
 
-    # Cria o arquivo de serviço para a 2ª Parte
-    SERVICE_PATH="/etc/systemd/system/meuservico.service"
-    echo "[Unit]" > "$SERVICE_PATH"
-    echo "Description=Meu Serviço de Reinicialização para 2ª Parte do script" >> "$SERVICE_PATH"
-    echo "" >> "$SERVICE_PATH"
-    echo "[Service]" >> "$SERVICE_PATH"
-    echo "Type=simple" >> "$SERVICE_PATH"
-    echo "ExecStart=/Proxmox-Debian12/2-setup_proxmox.sh" >> "$SERVICE_PATH"
-    echo "StandardOutput=tty" >> "$SERVICE_PATH"
-    echo "StandardError=tty" >> "$SERVICE_PATH"
-    echo "" >> "$SERVICE_PATH"
-    echo "[Install]" >> "$SERVICE_PATH"
-    echo "WantedBy=getty.target" >> "$SERVICE_PATH"
+    for user_home in /home/*; do
+    PROFILE_FILE="$user_home/.bashrc"
+    
+    # Verifica se o arquivo de perfil existe antes de adicionar
+    if [ -f "$PROFILE_FILE" ]; then
+        # Adiciona a linha de execução do script ao final do arquivo
+        echo "" >> "$PROFILE_FILE"
+        echo "# Executar script após o login" >> "$PROFILE_FILE"
+        echo "/Proxmox-Debian12/2-setup_proxmox.sh" >> "$PROFILE_FILE"
+        echo "" >> "$PROFILE_FILE"
 
-    # Recarrega o daemon do systemd para reconhecer as alterações
-    systemctl daemon-reload
+        echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
+    fi
+    done
 
     # Habilita o serviço para iniciar na inicialização
-    systemctl enable meuservico.service
 
     echo -e "\e[1;32mTrabalho Salvo!\e[0m"
     echo "O sistema será reiniciado automaticamente para concluir a instalação."
