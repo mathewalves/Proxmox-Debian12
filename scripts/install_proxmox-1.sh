@@ -22,7 +22,20 @@ install_proxmox-1()
 
 
  
-   # Preencher o array associativo com informações das interfaces
+   # Função para exibir informações da interface
+    exibir_informacoes_interface() {
+        interface="$1"
+        ip_address="$2"
+        mascara_subrede="$3"
+        gateway="$4"
+
+        echo -e "\e[1;36mInformações da interface $interface:\e[0m"
+        echo "Endereço IP: $ip_address"
+        echo "Máscara de Sub-rede: $mascara_subrede"
+        echo "Gateway: $gateway"
+    }
+
+    # Preencher o array associativo com informações das interfaces
     while read -r interface ip_address rest; do
         if [ -n "$interface" ]; then
             # Separar a string restante nos valores corretos
@@ -40,9 +53,9 @@ install_proxmox-1()
         select interface_option in "${!interfaces[@]}"; do
             if [ -n "$interface_option" ]; then
                 # Exibir informações completas da interface
-                read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
+                read -r ip_address mascara_subrede gateway <<< "$(echo "${interfaces[$interface_option]}" | awk '{print $1, $2, $4}')"
                 exibir_informacoes_interface "$interface_option" "$ip_address" "$mascara_subrede" "$gateway"
-                
+
                 # Perguntar ao usuário se deseja selecionar essa interface
                 read -p "Deseja selecionar essa interface? (S/n): " escolha
                 case "$escolha" in
