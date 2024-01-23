@@ -45,7 +45,7 @@ install_proxmox-1()
             # Separar a string restante nos valores corretos
             IFS=' /' read -ra values <<< "$rest"
             mascara_subrede="${values[-2]}"
-            gateway="${values[-1]}"
+            gateway="$(ip route show dev "$interface" | awk '/via/ {print $3}')"
 
             interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
         fi
@@ -86,7 +86,6 @@ install_proxmox-1()
             fi
         done
     done
-
 
     # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
     if grep -q "$current_hostname" /etc/hosts; then
