@@ -20,32 +20,51 @@ install_proxmox-1()
         mkdir -p "$config_dir"
     fi
 
-    # Exibindo informações de rede
-    echo -e "\e[1;36mSuas interfaces de rede:\e[0m"
 
-    # Criar um array associativo para armazenar as informações
-    declare -A interfaces
+    # Função para exibir o menu de seleção de interface
+    exibir_menu_interfaces() 
+    {
+        # Criar um array associativo para armazenar as informações
+        declare -A interfaces
 
-    # Preencher o array associativo com informações das interfaces
-    while read -r interface ip_address mascara_subrede gateway; do
-        if [ -n "$interface" ]; then
-            interfaces["$interface"]="$ip_address"
-        fi
-    done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
+        # Preencher o array associativo com informações das interfaces
+        while read -r interface ip_address mascara_subrede gateway; do
+            if [ -n "$interface" ]; then
+                interfaces["$interface"]="$ip_address"
+            fi
+        done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
 
-    # Exibir opções para o usuário
-    select interface_option in "${!interfaces[@]}"; do
-        if [ -n "$interface_option" ]; then
+        # Adicionar uma opção para voltar
+        opcoes=("Voltar" "${!interfaces[@]}")
+
+        # Exibir opções para o usuário
+        select interface_option in "${opcoes[@]}"; do
+            case "$interface_option" in
+                "Voltar")
+                    return 1
+                    ;;
+                *)
+                    if [ -n "$interface_option" ]; then
+                        echo -e "\e[1;36mInformações da interface selecionada:\e[0m"
+                        echo "Interface: $interface_option"
+                        echo "Endereço IP: ${interfaces[$interface_option]}"
+                        return 0
+                    else
+                        echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
+                        return 1
+                    fi
+                    ;;
+            esac
+        done
+    }
+
+    # Loop para exibir o menu até que o usuário faça uma seleção válida
+    while true; do
+        exibir_menu_interfaces
+        if [ $? -eq 0 ]; then
             break
-        else
-            echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
         fi
     done
-
-    # Exibir informações selecionadas
-    echo -e "\e[1;36mInformações da interface selecionada:\e[0m"
-    echo "Interface: $interface_option"
-    echo "Endereço IP: ${interfaces[$interface_option]}"
 
     # Extraindo informações
     read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
