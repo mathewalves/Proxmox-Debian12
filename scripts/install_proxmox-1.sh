@@ -23,7 +23,8 @@ install_proxmox-1()
 
  
    # Função para exibir informações da interface
-    exibir_informacoes_interface() {
+    exibir_informacoes_interface() 
+    {
         interface="$1"
         ip_address="$2"
         echo -e "\e[1;36mInformações da interface $interface:\e[0m"
@@ -160,7 +161,7 @@ reboot_setup()
             # Adiciona a linha de execução do script ao final do arquivo
             echo "" >> "$PROFILE_FILE"
             echo "# Executar script após o login" >> "$PROFILE_FILE"
-            echo "/Proxmox-Debian12/script/install_proxmox-2.sh" >> "$PROFILE_FILE"
+            echo "/Proxmox-Debian12/scripts/install_proxmox-2.sh" >> "$PROFILE_FILE"
             echo "" >> "$PROFILE_FILE"
 
             echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
