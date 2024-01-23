@@ -56,7 +56,7 @@ install_proxmox-1()
                 gateway="$(ip route show dev "$interface_option" | awk '/via/ {print $3}')"
 
                 # Obter a máscara de sub-rede (por padrão, /24 se não especificado)
-                mascara_subrede="${ip_address##*/}"
+                mascara_subrede="$(ip addr show dev "$interface_option" | awk '/inet / {split($2, a, "/"); print a[2]}')"
                 mascara_subrede="${mascara_subrede:-24}"
 
                 # Adicionar a máscara de sub-rede ao endereço IP
@@ -88,7 +88,6 @@ install_proxmox-1()
             fi
         done
     done
-
 
     # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
     if grep -q "$current_hostname" /etc/hosts; then
