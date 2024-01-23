@@ -23,23 +23,37 @@ install_proxmox-1()
 
  
 
-    # Preencher o array associativo com informações das interfaces usando ip e ip route
-    while read -r interface ip_address rest; do
-        if [ -n "$interface" ]; then
-            # Usar ip route para obter o gateway
-            gateway="$(ip route show dev $interface | awk '/^default/ {print $3}')"
 
-            interfaces["$interface"]="$ip_address $gateway"
+    # Função para exibir informações da interface
+    exibir_informacoes_interface() {
+        interface="$1"
+        ip_address="$2"
+        gateway="$3"
+
+        echo -e "\e[1;36mInformações da interface $interface:\e[0m"
+        echo "Endereço IP: $ip_address"
+        echo "Gateway: $gateway"
+    }
+
+    # Criar um array associativo para armazenar as informações
+    declare -A interfaces
+
+    # Preencher o array associativo com informações das interfaces
+    while read -r interface ip_address _; do
+        if [ -n "$interface" ]; then
+            interfaces["$interface"]="$ip_address"
         fi
-    done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1]}')
+    done < <(ip addr show | awk '/inet / {split($2, a, "/"); print $NF, a[1]}')
 
     # Loop principal
     while true; do
         # Exibir opções para o usuário
+        PS3="Selecione uma opção (Digite o número): "
         select interface_option in "${!interfaces[@]}"; do
             if [ -n "$interface_option" ]; then
                 # Exibir informações completas da interface
-                read -r ip_address gateway <<< "${interfaces[$interface_option]}"
+                read -r ip_address <<< "${interfaces[$interface_option]}"
+                gateway="$(ip route show dev "$interface_option" | awk '/via/ {print $3}')"
                 exibir_informacoes_interface "$interface_option" "$ip_address" "$gateway"
 
                 # Perguntar ao usuário se deseja selecionar essa interface
@@ -66,6 +80,7 @@ install_proxmox-1()
             fi
         done
     done
+
 
     # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
     if grep -q "$current_hostname" /etc/hosts; then
