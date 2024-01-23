@@ -21,7 +21,8 @@ install_proxmox-1()
     fi
 
 
-   # Função para exibir informações da interface
+ 
+    # Função para exibir informações da interface
     exibir_informacoes_interface() {
         interface="$1"
         ip_address="$2"
