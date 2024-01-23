@@ -44,12 +44,11 @@ install_proxmox-1()
         if [ -n "$interface" ]; then
             # Separar a string restante nos valores corretos
             IFS=' /' read -ra values <<< "$rest"
-            mascara_subrede="${values[-2]}"
-            gateway="$(ip route show dev "$interface" | awk '/via/ {print $3}')"
+            mascara_subrede="${values[-1]}"
 
-            interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
+            interfaces["$interface"]="$ip_address $mascara_subrede"
         fi
-    done < <(ip route show default | awk '/default/ {print $5}' | xargs -I{} ip addr show dev {} | awk '/inet / {split($2, a, "/"); print $NF, a[1], $2}')
+    done < <(ip addr show | awk '/inet / {split($2, a, "/"); print $NF, a[1], $2}')
 
     # Loop principal
     while true; do
@@ -58,7 +57,8 @@ install_proxmox-1()
         select interface_option in "${!interfaces[@]}"; do
             if [ -n "$interface_option" ]; then
                 # Exibir informações completas da interface
-                read -r ip_address mascara_subrede gateway <<< "$(echo "${interfaces[$interface_option]}" | awk '{print $1, $2, $3}')"
+                read -r ip_address mascara_subrede <<< "$(echo "${interfaces[$interface_option]}" | awk '{print $1, $2}')"
+                gateway="$(ip route show dev "$interface_option" | awk '/via/ {print $3}')"
                 exibir_informacoes_interface "$interface_option" "$ip_address" "$mascara_subrede" "$gateway"
 
                 # Perguntar ao usuário se deseja selecionar essa interface
