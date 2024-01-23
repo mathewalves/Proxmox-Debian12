@@ -24,7 +24,7 @@ install_proxmox-1()
  
 
 
-    # Função para exibir informações da interface
+   # Função para exibir informações da interface
     exibir_informacoes_interface() {
         interface="$1"
         ip_address="$2"
@@ -52,7 +52,7 @@ install_proxmox-1()
         select interface_option in "${!interfaces[@]}"; do
             if [ -n "$interface_option" ]; then
                 # Exibir informações completas da interface
-                read -r ip_address <<< "${interfaces[$interface_option]}"
+                read -r ip_address <<< "$(echo "${interfaces[$interface_option]}" | awk '{print $1}')"
                 gateway="$(ip route show dev "$interface_option" | awk '/via/ {print $3}')"
 
                 # Obter a máscara de sub-rede (por padrão, /24 se não especificado)
@@ -62,7 +62,7 @@ install_proxmox-1()
                 # Adicionar a máscara de sub-rede ao endereço IP
                 ip_address_with_mask="$ip_address/$mascara_subrede"
 
-                exibir_informacoes_interface "$interface_option" "$ip_address_with_mask" "$gateway"
+                exibir_informacoes_interface "$interface_option" "$ip_address" "$gateway"
 
                 # Perguntar ao usuário se deseja selecionar essa interface
                 read -p "Deseja selecionar essa interface? (S/n): " escolha
