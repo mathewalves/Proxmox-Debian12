@@ -116,6 +116,7 @@ iface vmbr0 inet static
     bridge_ports $INTERFACE
     bridge_stp off
     bridge_fd 0
+
 EOF
 
             break 2
@@ -140,6 +141,7 @@ iface vmbr0 inet dhcp
     bridge_ports $INTERFACE
     bridge_stp off
     bridge_fd 0
+
 EOF
 
             break 2
@@ -173,6 +175,7 @@ reboot()
 
 main()
 {
+    interface_old
     bridge
 
     echo -e "Deseja reiniciar o computador agora? (Opcional)"
