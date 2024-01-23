@@ -51,8 +51,9 @@ install_proxmox-1()
                 read -p "Deseja selecionar essa interface? (S/n): " escolha
                 case "$escolha" in
                     [nN]*)
+                        # Continuar com o restante do loop
                         ;;
-                    *)
+                    [sS]*)
                         # Extraindo informações
                         read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
 
@@ -64,6 +65,9 @@ install_proxmox-1()
 
                         echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
                         break
+                        ;;
+                    *)
+                        echo -e "\e[1;31mEscolha inválida. Por favor, selecione novamente.\e[0m"
                         ;;
                 esac
             else
