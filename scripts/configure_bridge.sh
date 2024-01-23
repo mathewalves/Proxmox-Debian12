@@ -38,7 +38,6 @@ bridge()
     echo -e "\e[1;36mConfigurações de rede:\e[0m"
     echo "Interface Física: $INTERFACE"
     echo "Endereço IP para a bridge: $IP_ADDRESS"
-    echo "Máscara de Sub-rede: $MASCARA_SUBREDE"
     echo "Gateway: $GATEWAY"
 
     verificar_bridge
@@ -48,63 +47,80 @@ bridge()
     PS3="Selecione uma opção (Digite o número): "
     options=("Configurar Manualmente" "Usar DHCP" "Sair")
 
-    select opt in "${options[@]}"; do
-        case $opt in
-            "Configurar Manualmente")
-                # Leitura manual das configurações
-                read -p "Informe o nome da interface física (deixe em branco para manter): " interface_fisica
-                read -p "Informe o endereço IP para a bridge (deixe em branco para manter): " endereco_ip
-                read -p "Informe a máscara de sub-rede para a bridge (deixe em branco para manter): " mascara_subrede
-                read -p "Informe o gateway para a bridge (deixe em branco para manter): " gateway
+  select opt in "${options[@]}"; do
+    case $opt in
+        "Configurar Manualmente")
+            # Leitura manual das configurações
+            read -p "Informe o nome da interface física (deixe em branco para manter "$INTERFACE"): " interface_fisica
+            read -p "Informe o endereço IP para a bridge com net mask (deixe em branco para manter "$IP_ADDRESS"): " endereco_ip
+            read -p "Informe o gateway para a bridge (deixe em branco para manter "$GATEWAY"): " gateway
 
-                    # Utilizar as variáveis lidas ou as novas informadas
-                    INTERFACE=${interface_fisica:-$INTERFACE}
-                    IP_ADDRESS=${endereco_ip:-$IP_ADDRESS}
-                    MASCARA_SUBREDE=${mascara_subrede:-$MASCARA_SUBREDE}
-                    GATEWAY=${gateway:-$GATEWAY}
+            # Utilizar as variáveis lidas ou as novas informadas
+            INTERFACE=${interface_fisica:-$INTERFACE}
+            IP_ADDRESS=${endereco_ip:-$IP_ADDRESS}
 
+            # Validar se o gateway é um endereço IP válido
+            if [[ -n "$gateway" && ! "$gateway" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "Gateway inválido. Saindo..."
+                exit 1
+            fi
 
-# Criar a bridge vmbr0 com as novas informações
-cat <<EOF >> /etc/network/interfaces
+            GATEWAY=${gateway:-$GATEWAY}
+
+            # Atualizar o arquivo de configuração
+            echo "INTERFACE=$INTERFACE" > "$config_file"
+            echo "IP_ADDRESS=$IP_ADDRESS" >> "$config_file"
+            echo "GATEWAY=$GATEWAY" >> "$config_file"
+
+            # Criar a bridge vmbr0 com as novas informações
+            cat <<EOF >> /etc/network/interfaces
+# Configurações da Interface Física
+# ...
+
+# Configurações da Bridge vmbr0
 auto vmbr0
 iface vmbr0 inet static
     address $IP_ADDRESS
-#    netmask $MASCARA_SUBREDE
     gateway $GATEWAY
     bridge_ports $INTERFACE
     bridge_stp off
     bridge_fd 0
 EOF
 
-                break 2
-                ;;
-            "Usar DHCP")
-                # Configuração para DHCP
-                # Criar a bridge vmbr0 com as novas informações
-cat <<EOF >> /etc/network/interfaces
+            break 2
+            ;;
+
+        "Usar DHCP")
+            # Configuração para DHCP
+            # Atualizar o arquivo de configuração
+            echo "INTERFACE=$INTERFACE" > "$config_file"
+            echo "IP_ADDRESS=" >> "$config_file"  # Remover o IP se estiver presente
+            echo "GATEWAY=" >> "$config_file"     # Remover o GATEWAY se estiver presente
+
+            # Criar a bridge vmbr0 com as novas informações
+            cat <<EOF >> /etc/network/interfaces
+# Configurações da Interface Física
+# ...
+
+# Configurações da Bridge vmbr0 para DHCP
 auto vmbr0
 iface vmbr0 inet dhcp
     bridge_ports $INTERFACE
     bridge_stp off
     bridge_fd 0
 EOF
-                    
-                break 2
-                ;;
-            "Sair")
-                echo "Saindo..."
-                exit 0
-                ;;
-            *) echo "Opção inválida";;
-        esac
-    done
 
-# Comentar as configurações da interface física no arquivo de configuração
-if [ -n "$interface_fisica" ]; then
-    sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
-    sed -i "/iface $INTERFACE inet dhcp/,/iface/ s/^/#/" /etc/network/interfaces
-fi
+            break 2
+            ;;
 
+        "Sair")
+            echo "Saindo..."
+            exit 0
+            ;;
+
+        *) echo "Opção inválida";;
+    esac
+done
 
 
     # Reiniciar o serviço de rede para aplicar as alterações
