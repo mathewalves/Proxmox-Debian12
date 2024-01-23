@@ -61,7 +61,6 @@ remove_os-prober()
     fi 
 }
 
-
 main()
 {
     echo -e "\e[1;93m2º Parte da instalação do ProxMox executado com sucesso.\e[0m"
@@ -71,15 +70,15 @@ main()
 
     # Mensagem de instalação concluída com cores e efeitos
     echo -e "Instalação concluída com sucesso!"
-    neofetch
+
+    # Verificar se o comando neofetch está instalado
+    if command -v neofetch &> /dev/null; then
+        neofetch
+    fi
 
     remove_service
 
-    echo -e "\e[1;32mInstalação do Proxmox concluída com sucesso!\e[0m"
-    echo -e "\e[1;91mAVISO: O sistema será reiniciado automaticamente para concluir a instalação.\e[0m"
-    sleep 5
-
-    systemctl reboot
+    ./configure_bridge.sh
 }
 
 main
