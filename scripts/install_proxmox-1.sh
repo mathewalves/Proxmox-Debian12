@@ -57,7 +57,7 @@ install_proxmox-1()
                         read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
 
                         # Solicitando o endereço IP
-                        echo -e "\e[1;32mDigite o endereço de IP da interface correta (exemplo: 192.168.0.128): \e[0m"
+                        read -p "Informe o seu endereço IP para adicionar em /etc/hosts (deixe em branco para adicionar: $ip_address): "
                         read -p "Resposta: " novo_ip_address
 
                         # Guardar o endereço de IP, máscara de sub-rede e gateway no arquivo network.conf
@@ -67,7 +67,6 @@ install_proxmox-1()
                         echo "GATEWAY=$gateway" >> "$config_file"
 
                         echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
-                        exit 0
                         ;;
                 esac
             else
