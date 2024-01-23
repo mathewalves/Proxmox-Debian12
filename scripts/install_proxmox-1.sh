@@ -29,7 +29,7 @@ install_proxmox-1()
     # Preencher o array associativo com informações das interfaces
     while read -r interface ip_address mascara_subrede gateway; do
         if [ -n "$interface" ]; then
-            interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
+            interfaces["$interface"]="$ip_address"
         fi
     done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
 
@@ -41,6 +41,11 @@ install_proxmox-1()
             echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
         fi
     done
+
+    # Exibir informações selecionadas
+    echo -e "\e[1;36mInformações da interface selecionada:\e[0m"
+    echo "Interface: $interface_option"
+    echo "Endereço IP: ${interfaces[$interface_option]}"
 
     # Extraindo informações
     read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
