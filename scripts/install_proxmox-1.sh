@@ -23,7 +23,7 @@ install_proxmox-1()
 
  
 
-    # Preencher o array associativo com informações das interfaces usando ifconfig
+    # Preencher o array associativo com informações das interfaces usando ip e ifconfig
     while read -r interface ip_address rest; do
         if [ -n "$interface" ]; then
             # Usar ifconfig para obter a máscara de sub-rede e o gateway
@@ -38,7 +38,7 @@ install_proxmox-1()
                 echo "A interface $interface não está disponível."
             fi
         fi
-    done < <(ifconfig -a | awk '/inet / {split($2, a, "/"); print $1, a[1]}')
+    done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1]}')
 
     # Loop principal
     while true; do
