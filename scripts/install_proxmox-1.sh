@@ -22,8 +22,7 @@ install_proxmox-1()
 
 
     # Função para exibir o menu de seleção de interface
-    exibir_menu_interfaces() 
-    {
+    exibir_menu_interfaces() {
         # Criar um array associativo para armazenar as informações
         declare -A interfaces
 
@@ -35,12 +34,12 @@ install_proxmox-1()
         done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
 
         # Adicionar uma opção para voltar
-        opcoes=("Voltar" "${!interfaces[@]}")
+        opcoes=("Sair" "${!interfaces[@]}")
 
         # Exibir opções para o usuário
         select interface_option in "${opcoes[@]}"; do
             case "$interface_option" in
-                "Voltar")
+                "Sair")
                     return 1
                     ;;
                 *)
@@ -48,20 +47,18 @@ install_proxmox-1()
                         echo -e "\e[1;36mInformações da interface selecionada:\e[0m"
                         echo "Interface: $interface_option"
                         echo "Endereço IP: ${interfaces[$interface_option]}"
-                        return 0
                     else
                         echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
-                        return 1
                     fi
                     ;;
             esac
         done
     }
 
-    # Loop para exibir o menu até que o usuário faça uma seleção válida
+    # Loop principal
     while true; do
         exibir_menu_interfaces
-        if [ $? -eq 0 ]; then
+        if [ $? -ne 0 ]; then
             break
         fi
     done
