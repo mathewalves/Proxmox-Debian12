@@ -22,28 +22,17 @@ install_proxmox-1()
 
 
  
-    # Função para exibir informações da interface
-    exibir_informacoes_interface() {
-        interface="$1"
-        ip_address="$2"
-        mascara_subrede="$3"
-        gateway="$4"
-        
-        echo -e "\e[1;36mInformações da interface $interface:\e[0m"
-        echo "Endereço IP: $ip_address"
-        echo "Máscara de Sub-rede: $mascara_subrede"
-        echo "Gateway: $gateway"
-    }
-
-    # Criar um array associativo para armazenar as informações
-    declare -A interfaces
-
-    # Preencher o array associativo com informações das interfaces
-    while read -r interface ip_address mascara_subrede gateway; do
+   # Preencher o array associativo com informações das interfaces
+    while read -r interface ip_address rest; do
         if [ -n "$interface" ]; then
+            # Separar a string restante nos valores corretos
+            IFS=' /' read -ra values <<< "$rest"
+            mascara_subrede="${values[1]}"
+            gateway="${values[3]}"
+
             interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
         fi
-    done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
+    done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $0}')
 
     # Loop principal
     while true; do

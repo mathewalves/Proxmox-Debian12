@@ -9,14 +9,14 @@ fi
 verificar_bridge()
 {
     # Verificar se a bridge vmbr0 já existe
-                    if grep -q "iface vmbr0" /etc/network/interfaces; then
-                        echo "A bridge vmbr0 já existe. Reconfigurando..."
-                        
-                        # Remover a configuração existente
-                        sed -i '/iface vmbr0/,/^$/d' /etc/network/interfaces
-                    else
-                        echo "Criando a bridge vmbr0..."
-                    fi
+    if grep -q "iface vmbr0" /etc/network/interfaces; then
+        echo "A bridge vmbr0 já existe. Reconfigurando..."
+        
+        # Remover a configuração existente, incluindo a linha 'auto vmbr0'
+        sed -i '/auto vmbr0/,/iface vmbr0/,/^$/d' /etc/network/interfaces
+    else
+        echo "Criando a bridge vmbr0..."
+    fi
 }
 
 bridge()
