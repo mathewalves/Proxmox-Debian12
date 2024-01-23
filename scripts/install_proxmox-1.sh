@@ -21,7 +21,7 @@ install_proxmox-1()
     fi
 
 
-    # Função para exibir informações da interface
+   # Função para exibir informações da interface
     exibir_informacoes_interface() {
         interface="$1"
         ip_address="$2"
@@ -39,7 +39,7 @@ install_proxmox-1()
         fi
     done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
 
-    # Loop para exibir o menu até que o usuário faça uma seleção válida
+    # Loop principal
     while true; do
         # Exibir opções para o usuário
         select interface_option in "${!interfaces[@]}"; do
@@ -50,23 +50,19 @@ install_proxmox-1()
                 read -p "Deseja selecionar essa interface? (S/n): " escolha
                 case "$escolha" in
                     [nN]*)
-                        break
                         ;;
                     *)
                         # Extraindo informações
                         read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
 
-                        # Solicitando o endereço IP
-                        read -p "Informe o seu endereço IP para adicionar em /etc/hosts (deixe em branco para adicionar: $ip_address): "
-                        read -p "Resposta: " novo_ip_address
-
                         # Guardar o endereço de IP, máscara de sub-rede e gateway no arquivo network.conf
                         echo "INTERFACE=$interface_option" > "$config_file"
-                        echo "IP_ADDRESS=${novo_ip_address:-$ip_address}" >> "$config_file"
+                        echo "IP_ADDRESS=$ip_address" >> "$config_file"
                         echo "MASCARA_SUBREDE=$mascara_subrede" >> "$config_file"
                         echo "GATEWAY=$gateway" >> "$config_file"
 
                         echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
+                        break
                         ;;
                 esac
             else
@@ -85,7 +81,7 @@ install_proxmox-1()
     fi
 
     # Adicionar a nova entrada ao arquivo /etc/hosts
-    echo "${novo_ip_address:-$ip_address}       $current_hostname.proxmox.com $current_hostname" | tee -a /etc/hosts > /dev/null
+    echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | tee -a /etc/hosts > /dev/null
 
     echo "Entrada adicionada com sucesso ao arquivo /etc/hosts:"
     cat /etc/hosts | grep "$current_hostname"
