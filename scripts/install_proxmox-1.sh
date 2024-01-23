@@ -22,7 +22,7 @@ install_proxmox-1()
 
 
  
-    # Função para exibir informações da interface
+   # Função para exibir informações da interface
     exibir_informacoes_interface() {
         interface="$1"
         ip_address="$2"
@@ -50,10 +50,7 @@ install_proxmox-1()
                 # Perguntar ao usuário se deseja selecionar essa interface
                 read -p "Deseja selecionar essa interface? (S/n): " escolha
                 case "$escolha" in
-                    [nN]*)
-                        # Continuar com o restante do loop
-                        ;;
-                    [sS]*)
+                    [sS])
                         # Extraindo informações
                         read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
 
@@ -64,7 +61,10 @@ install_proxmox-1()
                         echo "GATEWAY=$gateway" >> "$config_file"
 
                         echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
-                        break
+                        break 2  # Sair do loop principal
+                        ;;
+                    [nN])
+                        # Continuar com o restante do loop
                         ;;
                     *)
                         echo -e "\e[1;31mEscolha inválida. Por favor, selecione novamente.\e[0m"
