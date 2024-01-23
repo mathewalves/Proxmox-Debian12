@@ -44,7 +44,7 @@ install_proxmox-1()
         if [ -n "$interface" ]; then
             # Separar a string restante nos valores corretos
             IFS=' /' read -ra values <<< "$rest"
-            mascara_subrede="${values[1]}"
+            mascara_subrede="${values[-2]}"
             gateway="${values[-1]}"
 
             interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
