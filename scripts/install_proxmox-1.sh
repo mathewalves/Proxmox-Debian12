@@ -22,8 +22,7 @@ install_proxmox-1()
 
 
     # Função para exibir informações da interface
-    exibir_informacoes_interface() 
-    {
+    exibir_informacoes_interface() {
         interface="$1"
         ip_address="$2"
         echo -e "\e[1;36mInformações da interface $interface:\e[0m"
@@ -40,38 +39,42 @@ install_proxmox-1()
         fi
     done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
 
-    # Exibir opções para o usuário
-    select interface_option in "${!interfaces[@]}"; do
-        if [ -n "$interface_option" ]; then
-            exibir_informacoes_interface "$interface_option" "${interfaces[$interface_option]}"
-            read -p "Deseja selecionar outra interface? (S/n): " escolha
-            case "$escolha" in
-                [nN]*)
-                    exit 0
-                    ;;
-                *)
-                    ;;
-            esac
-        else
-            echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
-        fi
+    # Loop para exibir o menu até que o usuário faça uma seleção válida
+    while true; do
+        # Exibir opções para o usuário
+        select interface_option in "${!interfaces[@]}"; do
+            if [ -n "$interface_option" ]; then
+                exibir_informacoes_interface "$interface_option" "${interfaces[$interface_option]}"
+                
+                # Perguntar ao usuário se deseja selecionar essa interface
+                read -p "Deseja selecionar essa interface? (S/n): " escolha
+                case "$escolha" in
+                    [nN]*)
+                        break
+                        ;;
+                    *)
+                        # Extraindo informações
+                        read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
+
+                        # Solicitando o endereço IP
+                        echo -e "\e[1;32mDigite o endereço de IP da interface correta (exemplo: 192.168.0.128): \e[0m"
+                        read -p "Resposta: " novo_ip_address
+
+                        # Guardar o endereço de IP, máscara de sub-rede e gateway no arquivo network.conf
+                        echo "INTERFACE=$interface_option" > "$config_file"
+                        echo "IP_ADDRESS=${novo_ip_address:-$ip_address}" >> "$config_file"
+                        echo "MASCARA_SUBREDE=$mascara_subrede" >> "$config_file"
+                        echo "GATEWAY=$gateway" >> "$config_file"
+
+                        echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
+                        exit 0
+                        ;;
+                esac
+            else
+                echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
+            fi
+        done
     done
-
-    # Extraindo informações
-    read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
-
-    # Solicitando o endereço IP
-    echo -e "\e[1;32mDigite o endereço de IP da interface correta (exemplo: 192.168.0.128): \e[0m"
-    read -p "Resposta: " novo_ip_address
-
-    # Guardar o endereço de IP, máscara de sub-rede e gateway no arquivo network.conf
-    echo "INTERFACE=$interface_option" > "$config_file"
-    echo "IP_ADDRESS=${novo_ip_address:-$ip_address}" >> "$config_file"
-    echo "MASCARA_SUBREDE=$mascara_subrede" >> "$config_file"
-    echo "GATEWAY=$gateway" >> "$config_file"
-
-    echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
-    read -p "crt+c" ok
 
     # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
     if grep -q "$current_hostname" /etc/hosts; then

@@ -106,8 +106,6 @@ main()
     echo -e "'neofetch', 'net-tools' e 'nmap'. (Digite 'sim' para continuar, 'pular' para pular):\e[0m"
     read -p "Resposta:  " resposta
 
-
-    read ok
     if [ "$resposta" == "sim" ]; then
         # Instalação de Pacotes adicionais
         install_nala
