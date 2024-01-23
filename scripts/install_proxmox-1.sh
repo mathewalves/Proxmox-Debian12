@@ -27,10 +27,16 @@ install_proxmox-1()
     while read -r interface ip_address rest; do
         if [ -n "$interface" ]; then
             # Usar ifconfig para obter a máscara de sub-rede e o gateway
-            mascara_subrede="$(ifconfig "$interface" | awk '/netmask/ {print $4}' | cut -d: -f2)"
-            gateway="$(route -n | awk -v interface="$interface" '$8 == interface {print $2; exit}')"
+            ifconfig_output="$(ifconfig "$interface" 2>/dev/null)"
+            
+            if [ $? -eq 0 ]; then
+                mascara_subrede="$(echo "$ifconfig_output" | awk '/netmask/ {print $4}' | cut -d: -f2)"
+                gateway="$(route -n | awk -v interface="$interface" '$8 == interface {print $2; exit}')"
 
-            interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
+                interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
+            else
+                echo "A interface $interface não está disponível."
+            fi
         fi
     done < <(ifconfig -a | awk '/inet / {split($2, a, "/"); print $1, a[1]}')
 
