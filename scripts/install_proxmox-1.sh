@@ -54,7 +54,15 @@ install_proxmox-1()
                 # Exibir informações completas da interface
                 read -r ip_address <<< "${interfaces[$interface_option]}"
                 gateway="$(ip route show dev "$interface_option" | awk '/via/ {print $3}')"
-                exibir_informacoes_interface "$interface_option" "$ip_address" "$gateway"
+
+                # Obter a máscara de sub-rede (por padrão, /24 se não especificado)
+                mascara_subrede="${ip_address##*/}"
+                mascara_subrede="${mascara_subrede:-24}"
+
+                # Adicionar a máscara de sub-rede ao endereço IP
+                ip_address_with_mask="$ip_address/$mascara_subrede"
+
+                exibir_informacoes_interface "$interface_option" "$ip_address_with_mask" "$gateway"
 
                 # Perguntar ao usuário se deseja selecionar essa interface
                 read -p "Deseja selecionar essa interface? (S/n): " escolha
@@ -62,7 +70,7 @@ install_proxmox-1()
                     [sS])
                         # Guardar as informações no arquivo network.conf
                         echo "INTERFACE=$interface_option" > "$config_file"
-                        echo "IP_ADDRESS=$ip_address" >> "$config_file"
+                        echo "IP_ADDRESS=$ip_address_with_mask" >> "$config_file"
                         echo "GATEWAY=$gateway" >> "$config_file"
 
                         echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
