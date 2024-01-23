@@ -6,6 +6,36 @@ if [ "$(whoami)" != "root" ]; then
     exit $?
 fi
 
+interface_old() 
+{
+    # Verificar se já existe um arquivo interfaces.old
+    if [ -f "/etc/network/interfaces.old" ]; then
+        echo "Arquivo interfaces.old já existe. Pulando essa parte."
+    else
+        # Renomear /etc/network/interfaces para interfaces.old
+        mv /etc/network/interfaces /etc/network/interfaces.old
+
+        # Criar um novo arquivo interfaces com as informações relevantes
+        cat <<EOF > /etc/network/interfaces
+# Este arquivo de configuração foi gerado automaticamente pelo script de instalação do PROXMOX
+# Seu arquivo de configuração antigo foi renomeado e salvo como 'interfaces.old'
+# Caso deseja voltar as configurações antigas exclua este script e renomei o 'interfaces.old' para 'interfaces'
+
+source /etc/network/interfaces.d/*
+
+# Loopback
+auto lo
+iface lo inet loopback
+
+# Suas interfaces:
+
+
+EOF
+
+        echo "Arquivo interfaces.old criado com sucesso."
+    fi
+}
+
 verificar_bridge()
 {
     # Verificar se a bridge vmbr0 já existe
@@ -35,9 +65,9 @@ bridge()
     source "$config_file"
 
     # Exibindo informações de rede
-    echo -e "\e[1;36mConfigurações de rede:\e[0m"
+    echo -e "\e[1;36mInterface salva:\e[0m"
     echo "Interface Física: $INTERFACE"
-    echo "Endereço IP para a bridge: $IP_ADDRESS"
+    echo "Endereço IP / NETMASK: $IP_ADDRESS"
     echo "Gateway: $GATEWAY"
 
     verificar_bridge
@@ -51,7 +81,7 @@ bridge()
     case $opt in
         "Configurar Manualmente")
             # Leitura manual das configurações
-            read -p "Informe o nome da interface física (deixe em branco para manter "$INTERFACE"): " interface_fisica
+            read -p "Informe o nome da interface física / netmask (deixe em branco para manter "$INTERFACE"): " interface_fisica
             read -p "Informe o endereço IP para a bridge com net mask (deixe em branco para manter "$IP_ADDRESS"): " endereco_ip
             read -p "Informe o gateway para a bridge (deixe em branco para manter "$GATEWAY"): " gateway
 
@@ -75,7 +105,8 @@ bridge()
             # Criar a bridge vmbr0 com as novas informações
             cat <<EOF >> /etc/network/interfaces
 # Configurações da Interface Física
-# ...
+auto $INTERFACE
+# iface $INTERFACE inet manual
 
 # Configurações da Bridge vmbr0
 auto vmbr0
@@ -100,7 +131,8 @@ EOF
             # Criar a bridge vmbr0 com as novas informações
             cat <<EOF >> /etc/network/interfaces
 # Configurações da Interface Física
-# ...
+auto $INTERFACE
+# iface $INTERFACE inet dhcp
 
 # Configurações da Bridge vmbr0 para DHCP
 auto vmbr0
