@@ -21,45 +21,39 @@ install_proxmox-1()
     fi
 
 
-    # Função para exibir o menu de seleção de interface
-    exibir_menu_interfaces() {
-        # Criar um array associativo para armazenar as informações
-        declare -A interfaces
-
-        # Preencher o array associativo com informações das interfaces
-        while read -r interface ip_address mascara_subrede gateway; do
-            if [ -n "$interface" ]; then
-                interfaces["$interface"]="$ip_address"
-            fi
-        done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
-
-        # Adicionar uma opção para voltar
-        opcoes=("Sair" "${!interfaces[@]}")
-
-        # Exibir opções para o usuário
-        select interface_option in "${opcoes[@]}"; do
-            case "$interface_option" in
-                "Sair")
-                    return 1
-                    ;;
-                *)
-                    if [ -n "$interface_option" ]; then
-                        echo -e "\e[1;36mInformações da interface selecionada:\e[0m"
-                        echo "Interface: $interface_option"
-                        echo "Endereço IP: ${interfaces[$interface_option]}"
-                    else
-                        echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
-                    fi
-                    ;;
-            esac
-        done
+    # Função para exibir informações da interface
+    exibir_informacoes_interface() 
+    {
+        interface="$1"
+        ip_address="$2"
+        echo -e "\e[1;36mInformações da interface $interface:\e[0m"
+        echo "Endereço IP: $ip_address"
     }
 
-    # Loop principal
-    while true; do
-        exibir_menu_interfaces
-        if [ $? -ne 0 ]; then
-            break
+    # Criar um array associativo para armazenar as informações
+    declare -A interfaces
+
+    # Preencher o array associativo com informações das interfaces
+    while read -r interface ip_address mascara_subrede gateway; do
+        if [ -n "$interface" ]; then
+            interfaces["$interface"]="$ip_address"
+        fi
+    done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
+
+    # Exibir opções para o usuário
+    select interface_option in "${!interfaces[@]}"; do
+        if [ -n "$interface_option" ]; then
+            exibir_informacoes_interface "$interface_option" "${interfaces[$interface_option]}"
+            read -p "Deseja selecionar outra interface? (S/n): " escolha
+            case "$escolha" in
+                [nN]*)
+                    exit 0
+                    ;;
+                *)
+                    ;;
+            esac
+        else
+            echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
         fi
     done
 
