@@ -23,42 +23,24 @@ install_proxmox-1()
 
  
 
-    # Função para exibir informações da interface
-    exibir_informacoes_interface() {
-        interface="$1"
-        ip_address="$2"
-        mascara_subrede="$3"
-        gateway="$4"
-
-        echo -e "\e[1;36mInformações da interface $interface:\e[0m"
-        echo "Endereço IP: $ip_address"
-        echo "Máscara de Sub-rede: $mascara_subrede"
-        echo "Gateway: $gateway"
-    }
-
-    # Criar um array associativo para armazenar as informações
-    declare -A interfaces
-
-    # Preencher o array associativo com informações das interfaces
+    # Preencher o array associativo com informações das interfaces usando ifconfig
     while read -r interface ip_address rest; do
         if [ -n "$interface" ]; then
-            # Separar a string restante nos valores corretos
-            IFS=' /' read -ra values <<< "$rest"
-            mascara_subrede="${values[-1]}"
+            # Usar ifconfig para obter a máscara de sub-rede e o gateway
+            mascara_subrede="$(ifconfig "$interface" | awk '/netmask/ {print $4}' | cut -d: -f2)"
+            gateway="$(route -n | awk -v interface="$interface" '$8 == interface {print $2; exit}')"
 
-            interfaces["$interface"]="$ip_address $mascara_subrede"
+            interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
         fi
-    done < <(ip addr show | awk '/inet / {split($2, a, "/"); print $NF, a[1], $2}')
+    done < <(ifconfig -a | awk '/inet / {split($2, a, "/"); print $1, a[1]}')
 
     # Loop principal
     while true; do
         # Exibir opções para o usuário
-        PS3="Selecione uma opção (Digite o número): "
         select interface_option in "${!interfaces[@]}"; do
             if [ -n "$interface_option" ]; then
                 # Exibir informações completas da interface
-                read -r ip_address mascara_subrede <<< "$(echo "${interfaces[$interface_option]}" | awk '{print $1, $2}')"
-                gateway="$(ip route show dev "$interface_option" | awk '/via/ {print $3}')"
+                read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
                 exibir_informacoes_interface "$interface_option" "$ip_address" "$mascara_subrede" "$gateway"
 
                 # Perguntar ao usuário se deseja selecionar essa interface
