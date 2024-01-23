@@ -23,20 +23,13 @@ install_proxmox-1()
 
  
 
-    # Preencher o array associativo com informações das interfaces usando ip e ifconfig
+    # Preencher o array associativo com informações das interfaces usando ip e ip route
     while read -r interface ip_address rest; do
         if [ -n "$interface" ]; then
-            # Usar ifconfig para obter a máscara de sub-rede e o gateway
-            ifconfig_output="$(ifconfig "$interface" 2>/dev/null)"
-            
-            if [ $? -eq 0 ]; then
-                mascara_subrede="$(echo "$ifconfig_output" | awk '/netmask/ {print $4}' | cut -d: -f2)"
-                gateway="$(route -n | awk -v interface="$interface" '$8 == interface {print $2; exit}')"
+            # Usar ip route para obter o gateway
+            gateway="$(ip route show dev $interface | awk '/^default/ {print $3}')"
 
-                interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
-            else
-                echo "A interface $interface não está disponível."
-            fi
+            interfaces["$interface"]="$ip_address $gateway"
         fi
     done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1]}')
 
@@ -46,8 +39,8 @@ install_proxmox-1()
         select interface_option in "${!interfaces[@]}"; do
             if [ -n "$interface_option" ]; then
                 # Exibir informações completas da interface
-                read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
-                exibir_informacoes_interface "$interface_option" "$ip_address" "$mascara_subrede" "$gateway"
+                read -r ip_address gateway <<< "${interfaces[$interface_option]}"
+                exibir_informacoes_interface "$interface_option" "$ip_address" "$gateway"
 
                 # Perguntar ao usuário se deseja selecionar essa interface
                 read -p "Deseja selecionar essa interface? (S/n): " escolha
@@ -56,7 +49,6 @@ install_proxmox-1()
                         # Guardar as informações no arquivo network.conf
                         echo "INTERFACE=$interface_option" > "$config_file"
                         echo "IP_ADDRESS=$ip_address" >> "$config_file"
-                        echo "MASCARA_SUBREDE=$mascara_subrede" >> "$config_file"
                         echo "GATEWAY=$gateway" >> "$config_file"
 
                         echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
