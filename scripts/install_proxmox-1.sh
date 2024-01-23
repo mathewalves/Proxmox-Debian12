@@ -22,13 +22,17 @@ install_proxmox-1()
 
 
  
-   # Função para exibir informações da interface
-    exibir_informacoes_interface() 
-    {
+    # Função para exibir informações da interface
+    exibir_informacoes_interface() {
         interface="$1"
         ip_address="$2"
+        mascara_subrede="$3"
+        gateway="$4"
+        
         echo -e "\e[1;36mInformações da interface $interface:\e[0m"
         echo "Endereço IP: $ip_address"
+        echo "Máscara de Sub-rede: $mascara_subrede"
+        echo "Gateway: $gateway"
     }
 
     # Criar um array associativo para armazenar as informações
@@ -37,7 +41,7 @@ install_proxmox-1()
     # Preencher o array associativo com informações das interfaces
     while read -r interface ip_address mascara_subrede gateway; do
         if [ -n "$interface" ]; then
-            interfaces["$interface"]="$ip_address"
+            interfaces["$interface"]="$ip_address $mascara_subrede $gateway"
         fi
     done < <(ip addr | awk '/inet / {split($2, a, "/"); print $NF, a[1], $4, $6}')
 
@@ -46,16 +50,15 @@ install_proxmox-1()
         # Exibir opções para o usuário
         select interface_option in "${!interfaces[@]}"; do
             if [ -n "$interface_option" ]; then
-                exibir_informacoes_interface "$interface_option" "${interfaces[$interface_option]}"
+                # Exibir informações completas da interface
+                read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
+                exibir_informacoes_interface "$interface_option" "$ip_address" "$mascara_subrede" "$gateway"
                 
                 # Perguntar ao usuário se deseja selecionar essa interface
                 read -p "Deseja selecionar essa interface? (S/n): " escolha
                 case "$escolha" in
                     [sS])
-                        # Extraindo informações
-                        read -r ip_address mascara_subrede gateway <<< "${interfaces[$interface_option]}"
-
-                        # Guardar o endereço de IP, máscara de sub-rede e gateway no arquivo network.conf
+                        # Guardar as informações no arquivo network.conf
                         echo "INTERFACE=$interface_option" > "$config_file"
                         echo "IP_ADDRESS=$ip_address" >> "$config_file"
                         echo "MASCARA_SUBREDE=$mascara_subrede" >> "$config_file"
@@ -76,6 +79,7 @@ install_proxmox-1()
             fi
         done
     done
+
 
     # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
     if grep -q "$current_hostname" /etc/hosts; then
@@ -186,7 +190,8 @@ reboot_setup()
 
 main()
 {
-    read -p "Deseja iniciar a configuração do proxmox? (Digite 'sim' para continuar): " resposta_proxmox
+    echo -e "\e[1;33mDeseja iniciar a configuração do Proxmox? (Digite 'sim' para continuar):\e[0m"
+    read -p "Resposta: " resposta_proxmox
 
     if [ "$resposta_proxmox" != "sim" ]; then
         echo "Instalação cancelada. Saindo do script."

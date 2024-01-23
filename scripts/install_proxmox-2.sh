@@ -78,7 +78,28 @@ main()
 
     remove_service
 
-    ./configure_bridge.sh
+   echo -e "\e[1;33mDeseja configurar a bridge vmbr0 agora?\e[0m"
+    echo -e "(\e[1;31mImportante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde\e[0m)..."
+
+    read -p "Configurar agora? (Digite '\e[1;36msim\e[0m' para configurar): " configurar_agora
+
+    if [[ "${configurar_agora,,}" =~ ^[sS](im)?$ ]]; then
+        # Obtém o diretório do script atual
+        script_directory="$(dirname "$(readlink -f "$0")")"
+
+        # Caminho do script que você deseja executar
+        script_a_executar="$script_directory/configure_bridge"
+
+        # Verifica se o script a ser executado existe
+        if [ -e "$script_a_executar" ]; then
+            # Executa o script
+            bash "$script_a_executar"
+        else
+            echo "Erro: O script $script_a_executar não foi encontrado."
+        fi
+    else
+        echo -e "\e[1;33mA configuração da bridge vmbr0 pode ser feita mais tarde executando o script \e[1;36m./configure_bridge.sh\e[0m"
+    fi
 }
 
 main
