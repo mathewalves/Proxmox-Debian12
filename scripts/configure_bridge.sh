@@ -84,7 +84,10 @@ EOF
                 # Configuração para DHCP
 
                 # Comentar as configurações da interface física no arquivo de configuração
+                sed -i "/allow-hotplug $INTERFACE/s/^/#/" /etc/network/interfaces
+                sed -i "/auto $INTERFACE/s/^#//; /allow-hotplug $INTERFACE/s/^/#/" /etc/network/interfaces
                 sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
+                sed -i "/iface $INTERFACE inet dhcp/,/iface/ s/^/#/" /etc/network/interfaces
 
 # Criar a bridge vmbr0 com as novas informações
 cat <<EOF >> /etc/network/interfaces
