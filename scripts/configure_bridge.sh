@@ -14,56 +14,58 @@ fi
 # Caminho para o arquivo de configuração
 config_file="configs/network.conf"
 
-# Verificar se o arquivo de configuração existe
-if [ ! -f "$config_file" ]; then
-    echo -e "${amarelo}O arquivo de configuração ${ciano}$config_file${amarelo} não existe. Execute o script ${ciano}install_proxmox-1.sh${amarelo} primeiro ou configure manualmente.${normal}"
-fi
+bridge()
+{
+    # Verificar se o arquivo de configuração existe
+    if [ ! -f "$config_file" ]; then
+        echo -e "${amarelo}O arquivo de configuração ${ciano}$config_file${amarelo} não existe. Execute o script ${ciano}install_proxmox-1.sh${amarelo} primeiro ou configure manualmente.${normal}"
+    fi
 
-# Ler as configurações do arquivo
-source "$config_file"
+    # Ler as configurações do arquivo
+    source "$config_file"
 
-# Exibindo informações de rede
-echo -e "${ciano}Exibindo interface de network.conf:${normal}"
-echo -e "${azul}Interface Física:${normal} $INTERFACE"
-echo -e "${azul}Endereço IP:${normal} $IP_ADDRESS"
-echo -e "${azul}Gateway:${normal} $GATEWAY ${normal}"
+    # Exibindo informações de rede
+    echo -e "${ciano}Exibindo interface de network.conf:${normal}"
+    echo -e "${azul}Interface Física:${normal} $INTERFACE"
+    echo -e "${azul}Endereço IP:${normal} $IP_ADDRESS"
+    echo -e "${azul}Gateway:${normal} $GATEWAY ${normal}"
 
-# Utilizar as variáveis lidas do arquivo ou solicitar novas se estiverem em branco
-echo -e "${azul}Revisando configurações e as informações de interface de rede para criação da bridge...${normal}"
-PS3="Selecione uma opção (Digite o número): "
-options=("Configurar Manualmente" "Usar DHCP" "Sair")
+    # Utilizar as variáveis lidas do arquivo ou solicitar novas se estiverem em branco
+    echo -e "${azul}Revisando configurações e as informações de interface de rede para criação da bridge...${normal}"
+    PS3="Selecione uma opção (Digite o número): "
+    options=("Configurar Manualmente" "Usar DHCP" "Sair")
 
-select opt in "${options[@]}"; do
-    case $opt in
-        "Configurar Manualmente")
-            # Leitura manual das configurações
-            read -p "Informe o nome da interface física / netmask (deixe em branco para manter "$INTERFACE"): " interface_fisica
-            read -p "Informe o endereço IP para a bridge com net mask (deixe em branco para manter "$IP_ADDRESS"): " endereco_ip
-            read -p "Informe o gateway para a bridge (deixe em branco para manter "$GATEWAY"): " gateway
+    select opt in "${options[@]}"; do
+        case $opt in
+            "Configurar Manualmente")
+                # Leitura manual das configurações
+                read -p "Informe o nome da interface física / netmask (deixe em branco para manter "$INTERFACE"): " interface_fisica
+                read -p "Informe o endereço IP para a bridge com net mask (deixe em branco para manter "$IP_ADDRESS"): " endereco_ip
+                read -p "Informe o gateway para a bridge (deixe em branco para manter "$GATEWAY"): " gateway
 
-            # Utilizar as variáveis lidas ou as novas informadas
-            INTERFACE=${interface_fisica:-$INTERFACE}
-            IP_ADDRESS=${endereco_ip:-$IP_ADDRESS}
+                # Utilizar as variáveis lidas ou as novas informadas
+                INTERFACE=${interface_fisica:-$INTERFACE}
+                IP_ADDRESS=${endereco_ip:-$IP_ADDRESS}
 
-            # Validar se o gateway é um endereço IP válido
-            if [[ -n "$gateway" && ! "$gateway" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                echo -e "${vermelho}Gateway inválido. Saindo...${normal}"
-                exit 1
-            fi
+                # Validar se o gateway é um endereço IP válido
+                if [[ -n "$gateway" && ! "$gateway" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                    echo -e "${vermelho}Gateway inválido. Saindo...${normal}"
+                    exit 1
+                fi
 
-            GATEWAY=${gateway:-$GATEWAY}
+                GATEWAY=${gateway:-$GATEWAY}
 
-            # Atualizar o arquivo de configuração
-            echo "INTERFACE=$INTERFACE" > "$config_file"
-            echo "IP_ADDRESS=$IP_ADDRESS" >> "$config_file"
-            echo "GATEWAY=$GATEWAY" >> "$config_file"
+                # Atualizar o arquivo de configuração
+                echo "INTERFACE=$INTERFACE" > "$config_file"
+                echo "IP_ADDRESS=$IP_ADDRESS" >> "$config_file"
+                echo "GATEWAY=$GATEWAY" >> "$config_file"
 
-            # Comentar as configurações da interface física no arquivo de configuração
-            sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
-            sed -i "/iface $INTERFACE inet dhcp/,/iface/ s/^/#/" /etc/network/interfaces
+                # Comentar as configurações da interface física no arquivo de configuração
+                sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
+                sed -i "/iface $INTERFACE inet dhcp/,/iface/ s/^/#/" /etc/network/interfaces
 
-            # Criar a bridge vmbr0 com as novas informações
-            cat <<EOF >> /etc/network/interfaces
+                # Criar a bridge vmbr0 com as novas informações
+cat <<EOF >> /etc/network/interfaces
 auto vmbr0
 iface vmbr0 inet static
     address $IP_ADDRESS
@@ -73,17 +75,17 @@ iface vmbr0 inet static
     bridge_fd 0
 EOF
 
-            break 2
-            ;;
+                break 2
+                ;;
 
-        "Usar DHCP")
-            # Configuração para DHCP
+            "Usar DHCP")
+                # Configuração para DHCP
 
-            # Comentar as configurações da interface física no arquivo de configuração
-            sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
+                # Comentar as configurações da interface física no arquivo de configuração
+                sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
 
-            # Criar a bridge vmbr0 com as novas informações
-            cat <<EOF >> /etc/network/interfaces
+# Criar a bridge vmbr0 com as novas informações
+cat <<EOF >> /etc/network/interfaces
 auto vmbr0
 iface vmbr0 inet dhcp
     bridge_ports $INTERFACE
@@ -91,23 +93,24 @@ iface vmbr0 inet dhcp
     bridge_fd 0
 EOF
 
-            break 2
-            ;;
+                break 2
+                ;;
 
-        "Sair")
-            echo -e "${vermelho}Saindo...${normal}"
-            exit 0
-            ;;
+            "Sair")
+                echo -e "${vermelho}Saindo...${normal}"
+                exit 0
+                ;;
 
-        *) echo -e "${amarelo}Opção inválida${normal}";;
-    esac
-done
+            *) echo -e "${amarelo}Opção inválida${normal}";;
+        esac
+    done
 
-# Reiniciar o serviço de rede para aplicar as alterações
-echo -e "${amarelo}Reiniciando o serviço de rede...${normal}"
-systemctl restart networking
+    # Reiniciar o serviço de rede para aplicar as alterações
+    echo -e "${amarelo}Reiniciando o serviço de rede...${normal}"
+    systemctl restart networking
 
-echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
+    echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
+}
 
 reboot()
 {
@@ -120,7 +123,6 @@ reboot()
 
 main()
 {
-    interface_old
     bridge
 
     echo -e "${ciano}Deseja reiniciar o computador agora? [S/N] (Opcional)${normal}"
