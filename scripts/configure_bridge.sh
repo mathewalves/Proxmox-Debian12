@@ -84,7 +84,7 @@ bridge()
             echo "GATEWAY=$GATEWAY" >> "$config_file"
 
             # Criar a bridge vmbr0 com as novas informações
-            cat <<EOF >> script_proxmox_file
+            cat <<EOF >> $script_proxmox_file
 # Configurações da Interface Física
 # auto $INTERFACE
 # iface $INTERFACE inet manual
