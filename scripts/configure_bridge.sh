@@ -131,11 +131,11 @@ main()
     bridge
 
     echo -e "${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
-    read -p "Resposta " perguntar_reboot
+    read -p "Resposta: " perguntar_reboot
 
     perguntar_reboot=$(echo "$resposta" | tr '[:upper:]' '[:lower:]')
 
-    if ["$perguntar_reboot" == "s"]; then
+    if [ "$perguntar_reboot" == "s" ]; then
         reboot
     else
         echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
