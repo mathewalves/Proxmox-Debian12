@@ -12,7 +12,7 @@ if [ "$(whoami)" != "root" ]; then
 fi
 
 # Caminho para o arquivo script_proxmox no diretório /etc/network/interfaces.d/
-script_proxmox_file="/etc/network/interfaces.d/script_proxmox"
+script_proxmox_file="/etc/network/interfaces.d/script_proxmox.cfg"
 
 interface_old() 
 {

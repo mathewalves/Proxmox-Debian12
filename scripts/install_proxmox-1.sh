@@ -144,14 +144,12 @@ install_proxmox-3()
     echo -e "${ciano}1º parte: Passo 3/3"
     echo -e "Baixando o Proxmox VE Kernel... ${normal}"
 
-    if [ "$resposta" == "sim" ]; then
+     if command -v nala &> /dev/null; then
+        # Executar com 'nala' se estiver instalado
         nala install -y proxmox-default-kernel
     else
-        apt install -y proxmox-default-kernel
-    fi
-
-    if [ "$resposta" == "sim" ]; then
-        neofetch
+        # Executar com 'apt' se 'nala' não estiver instalado
+         apt install -y proxmox-default-kernel
     fi
 
     echo -e "${verde}Instalação da 1ºParte do ProxMox concluída com sucesso!${normal}"
@@ -197,7 +195,11 @@ reboot_setup()
 
 main()
 {
-    # Comandos de instalação do Proxmox
+    if command -v neofetch &> /dev/null; then
+        neofetch
+    fi
+
+    # Instalação do Proxmox
     echo -e "${ciano}iniciando instalação do Proxmox${normal}"
     install_proxmox-1
     install_proxmox-2
