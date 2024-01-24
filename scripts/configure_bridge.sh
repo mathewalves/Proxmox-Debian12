@@ -67,6 +67,7 @@ bridge()
                 # Criar a bridge vmbr0 com as novas informações
 cat <<EOF >> /etc/network/interfaces
 
+# Bridge Proxmox
 auto vmbr0
 iface vmbr0 inet static
     address $IP_ADDRESS
@@ -88,6 +89,7 @@ EOF
 # Criar a bridge vmbr0 com as novas informações
 cat <<EOF >> /etc/network/interfaces
 
+# Bridge Proxmox
 auto vmbr0
 iface vmbr0 inet dhcp
     bridge_ports $INTERFACE
