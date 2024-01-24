@@ -181,7 +181,7 @@ main()
 
         # Mensagem de boas-vindas
         echo -e "${ciano}Para acessar a interface do Proxmox, abra um navegador e digite:"
-        echo -e "${azul}http://$ip:$porta_proxmox/${normal}"
+        echo -e "${azul}https://$ip:$porta_proxmox/${normal}"
         echo -e "${verde}Usuário: root"
         echo -e "Senha: (a senha do root)${normal}"
     fi
