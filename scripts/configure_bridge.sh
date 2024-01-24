@@ -130,8 +130,10 @@ main()
 {
     bridge
 
-    echo -e "${ciano}Deseja reiniciar o computador agora? [S/N] (Opcional)${normal}"
+    echo -e "${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
     read -p "Resposta " perguntar_reboot
+
+    perguntar_reboot=$(echo "$resposta" | tr '[:upper:]' '[:lower:]')
 
     if ["$perguntar_reboot" == "s"]; then
         reboot
