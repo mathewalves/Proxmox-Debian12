@@ -173,6 +173,17 @@ main()
         if command -v neofetch &> /dev/null; then
             neofetch
         fi
+        # Obtendo o endereço IP
+        ip=$(hostname -I | cut -d' ' -f1)
+
+        # Número da porta padrão do Proxmox
+        porta_proxmox=8006
+
+        # Mensagem de boas-vindas
+        echo -e "${ciano}Para acessar a interface do Proxmox, abra um navegador e digite:"
+        echo -e "${azul}http://$ip:$porta_proxmox/${normal}"
+        echo -e "${verde}Usuário: root"
+        echo -e "Senha: (a senha do root)${normal}"
     fi
 }
 
