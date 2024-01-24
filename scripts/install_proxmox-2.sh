@@ -85,10 +85,10 @@ main()
     echo -e "(${amarelo}Importante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde${normal})..."
 
     read -p "Configurar agora? [S/N]: " configurar_agora
-
+    
     if [[ "${configurar_agora,,}" =~ ^[sS](im)?$ ]]; then
         # Caminho do script que você deseja executar
-        script_a_executar="./scripts/configure_bridge"
+        script_a_executar="./scripts/configure_bridge.sh"
 
         # Verifica se o script a ser executado existe
         if [ -e "$script_a_executar" ]; then
