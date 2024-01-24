@@ -1,5 +1,5 @@
 #!/bin/bash
-
+clear
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
     echo -e "${ciano}Tornando-se superusuário...${normal}"
