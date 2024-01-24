@@ -13,9 +13,6 @@ fi
 chmod +x scripts/*
 chmod +rw configs/*
 
-
-
-
 # Função para instalar sudo
 install_sudo() 
 {
@@ -52,7 +49,6 @@ install_nala()
     apt install -y nala
     echo -e "${verde}'nala' instalado com sucesso!${normal}"
 }
-
 
 # Função para instalar o neofetch
 install_neofetch() 
@@ -93,7 +89,6 @@ main()
     echo -e "${ciano} |_|                                       |_____|                    |_|    "  
     echo -e "\e[0m"
     
-
     # Bem-vindo com estilo
     echo -e "${ciano}            Script desenvolvido por: \e[1;92mhttps://github.com/mathewalves${normal}."
     echo ""
@@ -106,7 +101,6 @@ main()
     echo -e "${amarelo}Por favor, esteja ciente disso. Aperte 'Enter' para continuar...${normal}" 
     read ok
 
-    
     echo -e "${ciano}Deseja instalar os ${verde}pacotes adicionais${ciano}? [S/N]${normal}"
     read -p "Resposta:  " resposta
 
@@ -119,7 +113,6 @@ main()
         install_sudo
         install_neofetch
         install_network_tools
-
 
         # Atualizar sistema
         update_system

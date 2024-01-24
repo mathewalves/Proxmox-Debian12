@@ -14,7 +14,7 @@ fi
 # Caminho para o arquivo de configuração
 config_file="configs/network.conf"
 
-bridge()
+configure_bridge()
 {
     # Verificar se o arquivo de configuração existe
     if [ ! -f "$config_file" ]; then
@@ -84,8 +84,6 @@ EOF
                 # Configuração para DHCP
 
                 # Comentar as configurações da interface física no arquivo de configuração
-                sed -i "/allow-hotplug $INTERFACE/s/^/#/" /etc/network/interfaces
-                sed -i "/auto $INTERFACE/s/^#//; /allow-hotplug $INTERFACE/s/^/#/" /etc/network/interfaces
                 sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
                 sed -i "/iface $INTERFACE inet dhcp/,/iface/ s/^/#/" /etc/network/interfaces
 
@@ -120,10 +118,51 @@ EOF
     echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
 }
 
+perguntar_bridge()
+{
+    echo -e "${ciano}Deseja configurar a bridge vmbr0 agora?${normal}"
+    echo -e "${amarelo}Importante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde${normal}..."
+
+    read -p "Configurar agora? [S/N]: " configurar_agora
+    
+    if [[ "${configurar_agora,,}" =~ ^[sS](im)?$ ]]; then
+        # Caminho do script que você deseja executar
+        script_a_executar="./scripts/configure_bridge.sh"
+
+        # Verifica se o script a ser executado existe
+        if [ -e "$script_a_executar" ]; then
+            # Executa o script
+            bash "$script_a_executar"
+        else
+            echo -e "${vermelho}Erro: O script $script_a_executar não foi encontrado.${normal}"
+        fi
+    else
+        echo -e "${amarelo}Você pode configurar a bridge vmbr0 posteriormente executando o script ${ciano}/Proxmox-Debian12/scripts/configure_bridge.sh${amarelo}"
+        echo -e "ou através da interface web do Proxmox. Consulte a documentação do Proxmox para mais informações.${normal}"
+        exit 1
+    fi
+}
+
+# Remover inicialização do script junto com o sistema
+remove_start-script() 
+{
+    for user_home in /home/*; do
+        PROFILE_FILE="$user_home/.bashrc"
+        
+        # Remover a linha do script do arquivo de perfil
+        sed -i '/# Executar script após o login/,/# Fim do script 2/d' "$PROFILE_FILE"
+        echo -e "${azul}Removida a configuração do perfil para o usuário:${ciano} $(basename "$user_home").${normal}"
+
+       # Remover as linhas adicionadas ao /root/.bashrc
+        sed -i '/# Executar script após o login/,/\/Proxmox-Debian12\/scripts\/install_proxmox-2.sh/d' /root/.bashrc
+        echo -e "${azul}Removida a configuração automática do script no /root/.bashrc.${normal}"
+    done
+}
 
 main()
 {
-    bridge
+    perguntar_bridge
+    configure_bridge
 
     echo -e "${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
     read -p "Resposta: " perguntar_reboot

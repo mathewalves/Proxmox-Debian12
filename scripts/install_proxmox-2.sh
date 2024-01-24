@@ -10,8 +10,8 @@ if [ "$(whoami)" != "root" ]; then
     exit $?
 fi
 
-# Remover o serviço do systemd
-remove_service() 
+# Remover inicialização do script junto com o sistema
+remove_start-script() 
 {
     for user_home in /home/*; do
         PROFILE_FILE="$user_home/.bashrc"
@@ -20,9 +20,36 @@ remove_service()
         sed -i '/# Executar script após o login/,/# Fim do script 2/d' "$PROFILE_FILE"
         echo -e "${azul}Removida a configuração do perfil para o usuário:${ciano} $(basename "$user_home").${normal}"
 
-        # Remover a entrada do sudoers
-        sed -i "/$(basename "$user_home") ALL=(ALL:ALL) NOPASSWD: \/Proxmox-Debian12\/2-setup_proxmox.sh/d" /etc/sudoers.d/proxmox_setup
-        echo -e "${azul}Removida a configuração do sudoers para o usuário: ${ciano}$(basename "$user_home").${normal}"
+       # Remover as linhas adicionadas ao /root/.bashrc
+        sed -i '/# Executar script após o login/,/\/Proxmox-Debian12\/scripts\/install_proxmox-2.sh/d' /root/.bashrc
+        echo -e "${azul}Removida a configuração automática do script no /root/.bashrc.${normal}"
+    done
+}
+
+# Iniciar configuração da bridge após o reboot
+configure_bridge() 
+{
+    for user_home in /home/*; do
+        PROFILE_FILE="$user_home/.bashrc"
+        
+        # Verifica se o arquivo de perfil existe antes de adicionar
+        if [ -f "$PROFILE_FILE" ]; then
+            # Adiciona a linha de execução do script ao final do arquivo
+            echo "" >> "$PROFILE_FILE"
+            echo "# Executar script após o login" >> "$PROFILE_FILE"
+            echo "/Proxmox-Debian12/scripts/configure_bridge.sh" >> "$PROFILE_FILE"
+            echo "" >> "$PROFILE_FILE"
+
+            echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
+        fi
+
+        # Adicione as seguintes linhas ao final do arquivo /root/.bashrc
+        echo "" >> /root/.bashrc
+        echo "# Executar script após o login" >> /root/.bashrc
+        echo "/Proxmox-Debian12/scripts/configure_bridge.sh" >> /root/.bashrc
+        echo "" >> /root/.bashrc
+
+        echo "Configuração automática concluída para o usuário root."
     done
 }
 
@@ -69,7 +96,6 @@ remove_os-prober()
 
 main()
 {
-    echo -e "${verde}2º Parte da instalação do ProxMox concluída com sucesso!${normal}"
     proxmox-ve_packages
     remove_kernel
     remove_os-prober
@@ -79,27 +105,9 @@ main()
         neofetch
     fi
 
-    remove_service
-
-    echo -e "${ciano}Deseja configurar a bridge vmbr0 agora?${normal}"
-    echo -e "${amarelo}Importante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde${normal}..."
-
-    read -p "Configurar agora? [S/N]: " configurar_agora
-    
-    if [[ "${configurar_agora,,}" =~ ^[sS](im)?$ ]]; then
-        # Caminho do script que você deseja executar
-        script_a_executar="./scripts/configure_bridge.sh"
-
-        # Verifica se o script a ser executado existe
-        if [ -e "$script_a_executar" ]; then
-            # Executa o script
-            bash "$script_a_executar"
-        else
-            echo -e "${vermelho}Erro: O script $script_a_executar não foi encontrado.${normal}"
-        fi
-    else
-        echo -e "${amarelo}A configuração da bridge vmbr0 pode ser feita mais tarde executando o script ${ciano}Proxmox-Debian12/scripts/configure_bridge.sh${normal}"
-    fi
+    remove_start-script
+    echo -e "${verde}2º Parte da instalação do ProxMox concluída com sucesso!${normal}"
+    configure_bridge  
 }
 
 main

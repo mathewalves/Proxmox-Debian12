@@ -5,7 +5,6 @@ cd /Proxmox-Debian12
 # Carregar as variáveis de cores do arquivo colors.conf
 source ./configs/colors.conf
 
-
 install_proxmox-1()
 {
     echo -e "${ciano}1º parte: Passo 1/3${normal}"
@@ -176,9 +175,13 @@ reboot_setup()
             echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
         fi
 
-        # Adiciona a execução do script ao sudoers
-        echo "$(basename "$user_home") ALL=(ALL:ALL) NOPASSWD: /Proxmox-Debian12/scripts/install_proxmox-2.sh" >> /etc/sudoers.d/proxmox_setup
-        echo "Configuração do sudoers concluída para o usuário: $(basename "$user_home")."
+        # Adicione as seguintes linhas ao final do arquivo /root/.bashrc
+        echo "" >> /root/.bashrc
+        echo "# Executar script após o login" >> /root/.bashrc
+        echo "/Proxmox-Debian12/scripts/install_proxmox-2.sh" >> /root/.bashrc
+        echo "" >> /root/.bashrc
+
+        echo "Configuração automática concluída para o usuário root."
     done
 
     # Habilita o serviço para iniciar na inicialização
@@ -195,10 +198,6 @@ reboot_setup()
 
 main()
 {
-    if command -v neofetch &> /dev/null; then
-        neofetch
-    fi
-
     # Instalação do Proxmox
     echo -e "${ciano}iniciando instalação do Proxmox${normal}"
     install_proxmox-1
