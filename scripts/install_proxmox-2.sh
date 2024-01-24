@@ -1,14 +1,14 @@
 #!/bin/bash
+# Carregar as variáveis de cores do arquivo colors.conf
+cd /Proxmox-Debian12
+source ./configs/colors.conf
+
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
     echo -e "${ciano}Tornando-se superusuário...${normal}"
     sudo -E bash "$0" "$@"  # Executa o script como root
     exit $?
 fi
-
-# Carregar as variáveis de cores do arquivo colors.conf
-cd /Proxmox-Debian12
-source ./configs/colors.conf
 
 # Remover o serviço do systemd
 remove_service() 
@@ -18,11 +18,11 @@ remove_service()
         
         # Remover a linha do script do arquivo de perfil
         sed -i '/# Executar script após o login/,/# Fim do script 2/d' "$PROFILE_FILE"
-        echo -e "${amarelo}Removida a configuração do perfil para o usuário:${ciano} $(basename "$user_home").${normal}"
+        echo -e "${azul}Removida a configuração do perfil para o usuário:${ciano} $(basename "$user_home").${normal}"
 
         # Remover a entrada do sudoers
         sed -i "/$(basename "$user_home") ALL=(ALL:ALL) NOPASSWD: \/Proxmox-Debian12\/2-setup_proxmox.sh/d" /etc/sudoers.d/proxmox_setup
-        echo -e "${amarelo}Removida a configuração do sudoers para o usuário: ${ciano}$(basename "$user_home").${normal}"
+        echo -e "${azul}Removida a configuração do sudoers para o usuário: ${ciano}$(basename "$user_home").${normal}"
     done
 }
 
@@ -87,11 +87,8 @@ main()
     read -p "Configurar agora? [S/N]: " configurar_agora
 
     if [[ "${configurar_agora,,}" =~ ^[sS](im)?$ ]]; then
-        # Obtém o diretório do script atual
-        script_directory="$(dirname "$(readlink -f "$0")")"
-
         # Caminho do script que você deseja executar
-        script_a_executar="$script_directory/configure_bridge"
+        script_a_executar="./scripts/configure_bridge"
 
         # Verifica se o script a ser executado existe
         if [ -e "$script_a_executar" ]; then

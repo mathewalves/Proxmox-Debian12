@@ -1,15 +1,15 @@
 #!/bin/bash
+
+# Carregar as variáveis de cores do arquivo colors.conf
+cd /Proxmox-Debian12
+source ./configs/colors.conf
+
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
     echo -e "${ciano}Tornando-se superusuário...${normal}"
     sudo -E bash "$0" "$@"  # Executa o script como root
     exit $?
 fi
-
-# Carregar as variáveis de cores do arquivo colors.conf
-cd /Proxmox-Debian12
-source ./configs/colors.conf
-
 
 # Caminho para o arquivo script_proxmox no diretório /etc/network/interfaces.d/
 script_proxmox_file="/etc/network/interfaces.d/script_proxmox"
@@ -32,7 +32,6 @@ interface_old()
 
 # Suas interfaces:
 
-
 EOF
 }
 
@@ -52,9 +51,9 @@ bridge()
 
     # Exibindo informações de rede
     echo -e "${ciano}Exibindo interface de network.conf:${normal}"
-    echo -e "${ciano}Interface Física:${azul} $INTERFACE"
-    echo -e "${ciano}Endereço IP:${azul} $IP_ADDRESS"
-    echo -e "${ciano}Gateway:${azul} $GATEWAY ${normal}"
+    echo -e "${azul}Interface Física:${normal} $INTERFACE"
+    echo -e "${azul}Endereço IP:${normal} $IP_ADDRESS"
+    echo -e "${azul}Gateway:${normal} $GATEWAY ${normal}"
 
 
     # Utilizar as variáveis lidas do arquivo ou solicitar novas se estiverem em branco
@@ -149,7 +148,7 @@ done
 reboot()
 {
     echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
-    echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário!${normal}"
+    echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário.${normal}"
     echo -e "${amarelo}Reiniciando o Sistema...${normal}"
     sleep 5
     systemctl reboot

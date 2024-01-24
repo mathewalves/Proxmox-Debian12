@@ -1,5 +1,8 @@
 #!/bin/bash
+cd /Proxmox-Debian12
 clear
+# Carregar as variáveis de cores do arquivo colors.conf
+source ./configs/colors.conf
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
     echo -e "${ciano}Tornando-se superusuário...${normal}"
@@ -7,13 +10,10 @@ if [ "$(whoami)" != "root" ]; then
     exit $?
 fi
 
-cd /Proxmox-Debian12
-
 chmod +x scripts/*
 chmod +rw configs/*
 
-# Carregar as variáveis de cores do arquivo colors.conf
-source ./configs/colors.conf
+
 
 
 # Função para instalar sudo
@@ -107,7 +107,7 @@ main()
     read ok
 
     
-    echo -e "${azul}Deseja instalar os ${verde}pacotes adicionais${azul}? [S/N]?"
+    echo -e "${ciano}Deseja instalar os ${verde}pacotes adicionais${ciano}? [S/N]${normal}"
     read -p "Resposta:  " resposta
 
     # Converte a resposta para minúsculas antes de comparar

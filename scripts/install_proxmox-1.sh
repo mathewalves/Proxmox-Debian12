@@ -27,16 +27,16 @@ install_proxmox-1()
         mkdir -p "$config_dir"
     fi
 
-    echo -e "${ciano}Selecione a sua interface de rede: (Digite o número)${normal}"
+    echo -e "${ciano}Selecione a sua interface de rede: [Digite o número]${normal}"
    # Função para exibir informações da interface
     exibir_informacoes_interface() {
         interface="$1"
         ip_address="$2"
         gateway="$3"
 
-        echo -e "${azul}Informações da interface ${ciano}$interface${azul}:${normal}"
-        echo -e "${azul}Endereço IP: ${ciano}$ip_address"
-        echo -e "${azul}Gateway: ${ciano}$gateway"
+        echo -e "${azul}Informações da interface ${ciano}$interface"
+        echo -e "${azul}Endereço IP: ${normal}$ip_address"
+        echo -e "${azul}Gateway: ${normal}$gateway"
     }
 
     # Criar um array associativo para armazenar as informações
@@ -69,7 +69,7 @@ install_proxmox-1()
                 exibir_informacoes_interface "$interface_option" "$ip_address" "$gateway"
 
                 # Perguntar ao usuário se deseja selecionar essa interface
-                read -p "Deseja selecionar essa interface? (S/n): " escolha
+                read -p "Deseja selecionar essa interface? [S/N]: " escolha
                 case "$escolha" in
                     [sS])
                         # Guardar as informações no arquivo network.conf
@@ -132,11 +132,8 @@ install_proxmox-2()
     echo -e "${verde}Sucesso: A chave corresponde à esperada.${normal}"
     fi
 
-    if [ "$resposta" == "sim" ]; then
-        nala update && nala full-upgrade
-    else
-        apt update && apt full-upgrade
-    fi
+    apt-get update && apt-get -y full-upgrade
+
 
     echo -e "${ciano}...${normal}"
 
@@ -202,7 +199,6 @@ main()
 {
     # Comandos de instalação do Proxmox
     echo -e "${ciano}iniciando instalação do Proxmox${normal}"
-    echo -e "${ciano}...${normal}"
     install_proxmox-1
     install_proxmox-2
     install_proxmox-3
