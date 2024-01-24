@@ -81,8 +81,8 @@ main()
 
     remove_service
 
-   echo -e "${ciano}Deseja configurar a bridge vmbr0 agora?${normal}"
-    echo -e "(${amarelo}Importante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde${normal})..."
+    echo -e "${ciano}Deseja configurar a bridge vmbr0 agora?${normal}"
+    echo -e "${amarelo}Importante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde${normal}..."
 
     read -p "Configurar agora? [S/N]: " configurar_agora
     

@@ -142,7 +142,6 @@ done
     systemctl restart networking
 
     echo "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
-    cd /
 }
 
 reboot()
@@ -168,6 +167,7 @@ main()
         echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
         echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário!${normal}"
         sleep 5
+        cd /
         clear
         # Verificar se o comando neofetch está instalado
         if command -v neofetch &> /dev/null; then
