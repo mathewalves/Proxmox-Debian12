@@ -138,10 +138,10 @@ done
 
 
     # Reiniciar o serviço de rede para aplicar as alterações
-    echo "${amarelo}Reiniciando o serviço de rede...${normal}"
+    echo -e "${amarelo}Reiniciando o serviço de rede...${normal}"
     systemctl restart networking
 
-    echo "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
+    echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
 }
 
 reboot()
