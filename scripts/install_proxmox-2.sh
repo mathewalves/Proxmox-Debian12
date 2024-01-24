@@ -1,10 +1,14 @@
 #!/bin/bash
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
-    echo -e "\e[1;92mTornando-se superusuário...\e[0m"
+    echo -e "${ciano}Tornando-se superusuário...${normal}"
     sudo -E bash "$0" "$@"  # Executa o script como root
     exit $?
 fi
+
+# Carregar as variáveis de cores do arquivo colors.conf
+cd /Proxmox-Debian12
+source ./configs/colors.conf
 
 # Remover o serviço do systemd
 remove_service() 
@@ -14,17 +18,17 @@ remove_service()
         
         # Remover a linha do script do arquivo de perfil
         sed -i '/# Executar script após o login/,/# Fim do script 2/d' "$PROFILE_FILE"
-        echo "Removida a configuração do perfil para o usuário: $(basename "$user_home")."
+        echo -e "${amarelo}Removida a configuração do perfil para o usuário:${ciano} $(basename "$user_home").${normal}"
 
         # Remover a entrada do sudoers
         sed -i "/$(basename "$user_home") ALL=(ALL:ALL) NOPASSWD: \/Proxmox-Debian12\/2-setup_proxmox.sh/d" /etc/sudoers.d/proxmox_setup
-        echo "Removida a configuração do sudoers para o usuário: $(basename "$user_home")."
+        echo -e "${amarelo}Removida a configuração do sudoers para o usuário: ${ciano}$(basename "$user_home").${normal}"
     done
 }
 
 proxmox-ve_packages()
 {
-    echo -e "\e[1;36m1º parte: Passo 1/3\e[0m"
+    echo -e "${ciano}1º parte: Passo 1/3${normal}"
     if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala install -y proxmox-ve postfix open-iscsi chrony
@@ -37,7 +41,8 @@ proxmox-ve_packages()
 # Remover kernel do Debian
 remove_kernel()
 {
-    echo -e "\e[1;36m2º parte: Passo 2/3\e[0m"
+    echo -e "${ciano}2º parte: Passo 2/3${normal}"
+    echo -e "${ciano}Removendo Kernel do Debian 12 p/ o Proxmox...${normal}"
     if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala remove -y linux-image-amd64 'linux-image-6.1*'
@@ -51,7 +56,8 @@ remove_kernel()
 
 remove_os-prober()
 {
-    echo -e "\e[1;36m2º parte: Passo 3/3\e[0m"
+    echo -e "${ciano}2º parte: Passo 3/3${normal}"
+    echo -e "${ciano}Removendo os prober...${normal}"
    if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala remove -y os-prober
@@ -63,13 +69,10 @@ remove_os-prober()
 
 main()
 {
-    echo -e "\e[1;93m2º Parte da instalação do ProxMox executado com sucesso.\e[0m"
+    echo -e "${verde}2º Parte da instalação do ProxMox concluída com sucesso!${normal}"
     proxmox-ve_packages
     remove_kernel
     remove_os-prober
-
-    # Mensagem de instalação concluída com cores e efeitos
-    echo -e "Instalação concluída com sucesso!"
 
     # Verificar se o comando neofetch está instalado
     if command -v neofetch &> /dev/null; then
@@ -78,10 +81,10 @@ main()
 
     remove_service
 
-   echo -e "\e[1;33mDeseja configurar a bridge vmbr0 agora?\e[0m"
-    echo -e "(\e[1;31mImportante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde\e[0m)..."
+   echo -e "${ciano}Deseja configurar a bridge vmbr0 agora?${normal}"
+    echo -e "(${amarelo}Importante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde${normal})..."
 
-    read -p "Configurar agora? (Digite '\e[1;36msim\e[0m' para configurar): " configurar_agora
+    read -p "Configurar agora? [S/N]: " configurar_agora
 
     if [[ "${configurar_agora,,}" =~ ^[sS](im)?$ ]]; then
         # Obtém o diretório do script atual
@@ -95,10 +98,10 @@ main()
             # Executa o script
             bash "$script_a_executar"
         else
-            echo "Erro: O script $script_a_executar não foi encontrado."
+            echo -e "${vermelho}Erro: O script $script_a_executar não foi encontrado.${normal}"
         fi
     else
-        echo -e "\e[1;33mA configuração da bridge vmbr0 pode ser feita mais tarde executando o script \e[1;36m./configure_bridge.sh\e[0m"
+        echo -e "${amarelo}A configuração da bridge vmbr0 pode ser feita mais tarde executando o script ${ciano}Proxmox-Debian12/scripts/configure_bridge.sh${normal}"
     fi
 }
 

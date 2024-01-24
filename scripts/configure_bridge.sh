@@ -1,10 +1,15 @@
 #!/bin/bash
 # Tornando-se root
 if [ "$(whoami)" != "root" ]; then
-    echo -e "\e[1;92mTornando-se superusuário...\e[0m"
+    echo -e "${ciano}Tornando-se superusuário...${normal}"
     sudo -E bash "$0" "$@"  # Executa o script como root
     exit $?
 fi
+
+# Carregar as variáveis de cores do arquivo colors.conf
+cd /Proxmox-Debian12
+source ./configs/colors.conf
+
 
 # Caminho para o arquivo script_proxmox no diretório /etc/network/interfaces.d/
 script_proxmox_file="/etc/network/interfaces.d/script_proxmox"
@@ -34,12 +39,11 @@ EOF
 bridge()
 {
     # Caminho para o arquivo de configuração
-    cd /Proxmox-Debian12
     config_file="configs/network.conf"
 
     # Verificar se o arquivo de configuração existe
     if [ ! -f "$config_file" ]; then
-        echo -e "\e[1;31mO arquivo de configuração $config_file não existe. Execute o script install_proxmox-1.sh primeiro ou configure manualmente.\e[0m"
+        echo -e "${amarelo}O arquivo de configuração ${ciano}$config_file${amarelo} não existe. Execute o script ${ciano}install_proxmox-1.sh${amarelo} primeiro ou configure manualmente.${normal}"
         exit 1
     fi
 
@@ -47,14 +51,14 @@ bridge()
     source "$config_file"
 
     # Exibindo informações de rede
-    echo -e "\e[1;36mInterface salva:\e[0m"
-    echo "Interface Física: $INTERFACE"
-    echo "Endereço IP / NETMASK: $IP_ADDRESS"
-    echo "Gateway: $GATEWAY"
+    echo -e "${ciano}Exibindo interface de network.conf:${normal}"
+    echo -e "${ciano}Interface Física:${azul} $INTERFACE"
+    echo -e "${ciano}Endereço IP:${azul} $IP_ADDRESS"
+    echo -e "${ciano}Gateway:${azul} $GATEWAY ${normal}"
 
 
     # Utilizar as variáveis lidas do arquivo ou solicitar novas se estiverem em branco
-    echo -e "Configurando as informações da interface de rede para criação da bridge..."
+    echo -e "${azul}Revisando configurações e as informações de interface de rede para criação da bridge...${normal}"
     PS3="Selecione uma opção (Digite o número): "
     options=("Configurar Manualmente" "Usar DHCP" "Sair")
 
@@ -72,7 +76,7 @@ bridge()
 
             # Validar se o gateway é um endereço IP válido
             if [[ -n "$gateway" && ! "$gateway" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                echo "Gateway inválido. Saindo..."
+                echo -e "${vermelho}Gateway inválido. Saindo...${normal}"
                 exit 1
             fi
 
@@ -125,27 +129,28 @@ EOF
             ;;
 
         "Sair")
-            echo "Saindo..."
+            echo -e "${vermelho}Saindo...${normal}"
             exit 0
             ;;
 
-        *) echo "Opção inválida";;
+        *) echo -e "${amarelo}Opção inválida${normal}";;
     esac
 done
 
 
     # Reiniciar o serviço de rede para aplicar as alterações
-    echo "Reiniciando o serviço de rede..."
+    echo "${amarelo}Reiniciando o serviço de rede...${normal}"
     systemctl restart networking
 
-    echo "A bridge vmbr0 foi criada com sucesso!"
+    echo "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
     cd /
 }
 
 reboot()
 {
-    echo -e "\e[1;32mInstalação e configuração do Proxmox concluída com sucesso!\e[0m"
-    echo -e "\e[1;91mAVISO: O sistema será reiniciado.\e[0m"
+    echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
+    echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário!${normal}"
+    echo -e "${amarelo}Reiniciando o Sistema...${normal}"
     sleep 5
     systemctl reboot
 }
@@ -155,13 +160,21 @@ main()
     interface_old
     bridge
 
-    echo -e "Deseja reiniciar o computador agora? (Opcional)"
+    echo -e "${ciano}Deseja reiniciar o computador agora? [S/N] (Opcional)${normal}"
     read -p "Resposta " perguntar_reboot
 
-    if ["$perguntar_reboot" == "sim"]; then
+    if ["$perguntar_reboot" == "s"]; then
         reboot
+    else
+        echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
+        echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário!${normal}"
+        sleep 5
+        clear
+        # Verificar se o comando neofetch está instalado
+        if command -v neofetch &> /dev/null; then
+            neofetch
+        fi
     fi
-    
 }
 
 main

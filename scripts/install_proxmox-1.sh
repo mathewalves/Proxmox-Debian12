@@ -1,14 +1,21 @@
 #!/bin/bash
+
+cd /Proxmox-Debian12
+
+# Carregar as variáveis de cores do arquivo colors.conf
+source ./configs/colors.conf
+
+
 install_proxmox-1()
 {
-    echo -e "\e[1;36m1º parte: Passo 1/3\e[0m"
-    echo "Adicionando uma entrada em /etc/hosts para seu endereço ip."
+    echo -e "${ciano}1º parte: Passo 1/3${normal}"
 
     # Obtendo o nome do host atual
     current_hostname=$(hostname)
 
-    echo "Seu hostname:"
+    echo -e "${azul}nome do Host atual: ${ciano}"
     hostname
+    echo -e "${normal}"
     
     # Exibindo interfaces de rede
     # Caminho para o diretório de configuração
@@ -20,19 +27,16 @@ install_proxmox-1()
         mkdir -p "$config_dir"
     fi
 
-
- 
-
-
+    echo -e "${ciano}Selecione a sua interface de rede: (Digite o número)${normal}"
    # Função para exibir informações da interface
     exibir_informacoes_interface() {
         interface="$1"
         ip_address="$2"
         gateway="$3"
 
-        echo -e "\e[1;36mInformações da interface $interface:\e[0m"
-        echo "Endereço IP: $ip_address"
-        echo "Gateway: $gateway"
+        echo -e "${azul}Informações da interface ${ciano}$interface${azul}:${normal}"
+        echo -e "${azul}Endereço IP: ${ciano}$ip_address"
+        echo -e "${azul}Gateway: ${ciano}$gateway"
     }
 
     # Criar um array associativo para armazenar as informações
@@ -73,61 +77,59 @@ install_proxmox-1()
                         echo "IP_ADDRESS=$ip_address_with_mask" >> "$config_file"
                         echo "GATEWAY=$gateway" >> "$config_file"
 
-                        echo -e "\e[1;36mConfigurações salvas no arquivo $config_file.\e[0m"
+                        echo -e "${verde}Configurações salvas no arquivo ${ciano}$config_file.${normal}"
                         break 2  # Sair do loop principal
                         ;;
                     [nN])
                         # Continuar com o restante do loop
                         ;;
                     *)
-                        echo -e "\e[1;31mEscolha inválida. Por favor, selecione novamente.\e[0m"
+                        echo -e "${amarelo}Escolha inválida. Por favor, selecione novamente.${normal}"
                         ;;
                 esac
             else
-                echo -e "\e[1;31mPor favor, selecione uma opção válida.\e[0m"
+                echo -e "${amarelo}Por favor, selecione uma opção válida.${normal}"
             fi
         done
     done
 
+    echo -e "${azul}Adicionando ou atualizando uma entrada em /etc/hosts para seu endereço IP...${normal}"
     # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
-    if grep -q "$current_hostname" /etc/hosts; then
-        echo "O nome do host '$current_hostname' está presente no arquivo /etc/hosts."
+    if grep -qE "$ip_address\s+$current_hostname\.proxmox\.com\s+$current_hostname" /etc/hosts; then
+        # A entrada já existe, atualize-a
+        sed -i -E "s/($ip_address\s+$current_hostname\.proxmox\.com\s+$current_hostname).*/$ip_address       $current_hostname.proxmox.com $current_hostname/" /etc/hosts
+        echo -e "${azul}A entrada para ${ciano}'$current_hostname'${azul} foi atualizada no arquivo ${ciano}/etc/hosts.${normal}"
     else 
-        echo "Erro 01:"
-        echo "O nome do host '$current_hostname' não está presente no arquivo /etc/hosts"
-        exit 1
+        # A entrada não existe, adicione-a
+        echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | tee -a /etc/hosts > /dev/null
+        echo -e "${verde}Entrada adicionada com sucesso ao arquivo ${ciano}/etc/hosts:${normal}"
+        cat /etc/hosts | grep "$current_hostname"
     fi
 
-    # Adicionar a nova entrada ao arquivo /etc/hosts
-    echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | tee -a /etc/hosts > /dev/null
-
-    echo "Entrada adicionada com sucesso ao arquivo /etc/hosts:"
-    cat /etc/hosts | grep "$current_hostname"
-
-    echo "..."
+    echo -e "${ciano}...${normal}"
 }
 
 install_proxmox-2()
 {
     
-    echo -e "\e[1;36m1º parte: Passo 2/3\e[0m"
-    echo "Adicionando o repositório do Proxmox VE."
+    echo -e "${ciano}1º parte: Passo 2/3${normal}"
+    echo -e "${ciano}Adicionando o repositório do Proxmox VE...${normal}"
 
     echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
 
     wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
 
-    echo "Verificando Key..."
+    echo -e "${amarelo}Verificando Key...${normal}"
 
     # Calcula o hash da chave
     chave_hash=$(sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg | cut -d ' ' -f1)
 
     # Verifica se a chave está vazia
     if [ -z "$chave_hash" ]; then
-    echo "Erro: A chave não corresponde à esperada ou está vazia. A instalação do Proxmox pode ser comprometida."
+    echo -e "${vermelho}Erro: A chave não corresponde à esperada ou está vazia. A instalação do Proxmox pode ser comprometida.${normal}"
     exit 1
     else
-    echo "Sucesso: A chave corresponde à esperada."
+    echo -e "${verde}Sucesso: A chave corresponde à esperada.${normal}"
     fi
 
     if [ "$resposta" == "sim" ]; then
@@ -136,14 +138,14 @@ install_proxmox-2()
         apt update && apt full-upgrade
     fi
 
-    echo "..."
+    echo -e "${ciano}...${normal}"
 
 }
 
 install_proxmox-3()
 {
-    echo -e "\e[1;36m1º parte: Passo 3/3\e[0m"
-    echo "Baixando o Proxmox VE Kernel."
+    echo -e "${ciano}1º parte: Passo 3/3"
+    echo -e "Baixando o Proxmox VE Kernel... ${normal}"
 
     if [ "$resposta" == "sim" ]; then
         nala install -y proxmox-default-kernel
@@ -155,15 +157,15 @@ install_proxmox-3()
         neofetch
     fi
 
-    echo -e "\e[1;32mInstalação da 1ºParte do ProxMox concluída com sucesso!\e[0m"
+    echo -e "${verde}Instalação da 1ºParte do ProxMox concluída com sucesso!${normal}"
 }
 
 reboot_setup()
 {
-    echo -e "\e[1;93mExecutando 2º Parte da instalação após o reboot do ProxMox.\e[0m"
+    echo -e "${amarelo}A 2º Parte da instalação será iniciada após o proximo reboot.${normal}"
 
     # Exibe mensagem de aviso sobre a reinicialização
-    echo -e "\e[1;91mAVISO: O sistema precisará ser reiniciado. Salvando trabalho...\e[0m"
+    echo -e "${amarelo}AVISO: O sistema precisará ser reiniciado. Salvando trabalho...${normal}"
 
     for user_home in /home/*; do
         PROFILE_FILE="$user_home/.bashrc"
@@ -186,8 +188,8 @@ reboot_setup()
 
     # Habilita o serviço para iniciar na inicialização
 
-    echo -e "\e[1;32mTrabalho Salvo!\e[0m"
-    echo -e "\e[1;91mO sistema será reiniciado automaticamente para concluir a instalação.\e[0m"
+    echo -e "${verde}Trabalho Salvo!${ciano}"
+    echo -e "${ciano}Reiniciado o sistema automaticamente para concluir a instalação...${normal}"
 
     # Aguarda alguns segundos antes de reiniciar
     sleep 5
@@ -198,20 +200,9 @@ reboot_setup()
 
 main()
 {
-    echo -e "\e[1;33mDeseja iniciar a configuração do Proxmox? (Digite 'sim' para continuar):\e[0m"
-    read -p "Resposta: " resposta_proxmox
-
-    if [ "$resposta_proxmox" != "sim" ]; then
-        echo "Instalação cancelada. Saindo do script."
-        exit 1
-    fi
-
-    echo -e "\e[1;36mBem-vindo ao script de instalação do Proxmox no Debian 12 Bookworm\e[0m"
-    echo -e "\e[1;91mAVISO: Durante a instalação, o sistema pode reiniciar várias vezes. Evite Fechar o Script durante a instalação!\e[0m"
-
     # Comandos de instalação do Proxmox
-    echo "iniciando instalação do Proxmox"
-    echo "..."
+    echo -e "${ciano}iniciando instalação do Proxmox${normal}"
+    echo -e "${ciano}...${normal}"
     install_proxmox-1
     install_proxmox-2
     install_proxmox-3
