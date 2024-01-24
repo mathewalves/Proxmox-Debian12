@@ -108,6 +108,16 @@ main()
     remove_start-script
     echo -e "${verde}2º Parte da instalação do ProxMox concluída com sucesso!${normal}"
     configure_bridge  
+
+    echo -e "${ciano}Reiniciado o sistema automaticamente para concluir a instalação...${normal}"
+    echo -e "${amarelo}Faço o login como root após o reboot.${normal}"
+    
+
+    # Aguarda alguns segundos antes de reiniciar
+    sleep 5
+
+    # Reinicia o sistema
+    systemctl reboot
 }
 
 main

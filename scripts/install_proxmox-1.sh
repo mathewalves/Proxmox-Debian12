@@ -188,6 +188,7 @@ reboot_setup()
 
     echo -e "${verde}Trabalho Salvo!${ciano}"
     echo -e "${ciano}Reiniciado o sistema automaticamente para concluir a instalação...${normal}"
+    echo -e "${amarelo}Faço o login como root após o reboot.${normal}"
 
     # Aguarda alguns segundos antes de reiniciar
     sleep 5
