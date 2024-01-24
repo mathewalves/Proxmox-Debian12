@@ -11,57 +11,29 @@ if [ "$(whoami)" != "root" ]; then
     exit $?
 fi
 
-# Caminho para o arquivo script_proxmox no diretório /etc/network/interfaces.d/
-script_proxmox_file="/etc/network/interfaces.d/script_proxmox.cfg"
+# Caminho para o arquivo de configuração
+config_file="configs/network.conf"
 
-interface_old() 
-{
+# Verificar se o arquivo de configuração existe
+if [ ! -f "$config_file" ]; then
+    echo -e "${amarelo}O arquivo de configuração ${ciano}$config_file${amarelo} não existe. Execute o script ${ciano}install_proxmox-1.sh${amarelo} primeiro ou configure manualmente.${normal}"
+fi
 
-    # Verificar se o arquivo script_proxmox já existe
-    if [ -e "$script_proxmox_file" ]; then
-        # Se o arquivo existir, limpe o conteúdo
-        echo "" > "$script_proxmox_file"
-    else
-        # Se o arquivo não existir, crie-o
-        touch "$script_proxmox_file"
-    fi
+# Ler as configurações do arquivo
+source "$config_file"
 
-    # Criar um novo arquivo interfaces com as informações relevantes
-    cat <<EOF > $script_proxmox_file
-# Este arquivo de configuração foi gerado automaticamente pelo script de instalação do PROXMOX
+# Exibindo informações de rede
+echo -e "${ciano}Exibindo interface de network.conf:${normal}"
+echo -e "${azul}Interface Física:${normal} $INTERFACE"
+echo -e "${azul}Endereço IP:${normal} $IP_ADDRESS"
+echo -e "${azul}Gateway:${normal} $GATEWAY ${normal}"
 
-# Suas interfaces:
+# Utilizar as variáveis lidas do arquivo ou solicitar novas se estiverem em branco
+echo -e "${azul}Revisando configurações e as informações de interface de rede para criação da bridge...${normal}"
+PS3="Selecione uma opção (Digite o número): "
+options=("Configurar Manualmente" "Usar DHCP" "Sair")
 
-EOF
-}
-
-bridge()
-{
-    # Caminho para o arquivo de configuração
-    config_file="configs/network.conf"
-
-    # Verificar se o arquivo de configuração existe
-    if [ ! -f "$config_file" ]; then
-        echo -e "${amarelo}O arquivo de configuração ${ciano}$config_file${amarelo} não existe. Execute o script ${ciano}install_proxmox-1.sh${amarelo} primeiro ou configure manualmente.${normal}"
-        exit 1
-    fi
-
-    # Ler as configurações do arquivo
-    source "$config_file"
-
-    # Exibindo informações de rede
-    echo -e "${ciano}Exibindo interface de network.conf:${normal}"
-    echo -e "${azul}Interface Física:${normal} $INTERFACE"
-    echo -e "${azul}Endereço IP:${normal} $IP_ADDRESS"
-    echo -e "${azul}Gateway:${normal} $GATEWAY ${normal}"
-
-
-    # Utilizar as variáveis lidas do arquivo ou solicitar novas se estiverem em branco
-    echo -e "${azul}Revisando configurações e as informações de interface de rede para criação da bridge...${normal}"
-    PS3="Selecione uma opção (Digite o número): "
-    options=("Configurar Manualmente" "Usar DHCP" "Sair")
-
-  select opt in "${options[@]}"; do
+select opt in "${options[@]}"; do
     case $opt in
         "Configurar Manualmente")
             # Leitura manual das configurações
@@ -86,13 +58,12 @@ bridge()
             echo "IP_ADDRESS=$IP_ADDRESS" >> "$config_file"
             echo "GATEWAY=$GATEWAY" >> "$config_file"
 
-            # Criar a bridge vmbr0 com as novas informações
-            cat <<EOF >> $script_proxmox_file
-# Configurações da Interface Física
-# auto $INTERFACE
-# iface $INTERFACE inet manual
+            # Comentar as configurações da interface física no arquivo de configuração
+            sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
+            sed -i "/iface $INTERFACE inet dhcp/,/iface/ s/^/#/" /etc/network/interfaces
 
-# Configurações da Bridge vmbr0
+            # Criar a bridge vmbr0 com as novas informações
+            cat <<EOF >> /etc/network/interfaces
 auto vmbr0
 iface vmbr0 inet static
     address $IP_ADDRESS
@@ -100,7 +71,6 @@ iface vmbr0 inet static
     bridge_ports $INTERFACE
     bridge_stp off
     bridge_fd 0
-
 EOF
 
             break 2
@@ -109,19 +79,16 @@ EOF
         "Usar DHCP")
             # Configuração para DHCP
 
-            # Criar a bridge vmbr0 com as novas informações
-cat <<EOF >> $script_proxmox_file
-# Configurações da Interface Física
-# auto $INTERFACE
-# iface $INTERFACE inet dhcp
+            # Comentar as configurações da interface física no arquivo de configuração
+            sed -i "/iface $INTERFACE inet static/,/iface/ s/^/#/" /etc/network/interfaces
 
-# Configurações da Bridge vmbr0 para DHCP
+            # Criar a bridge vmbr0 com as novas informações
+            cat <<EOF >> /etc/network/interfaces
 auto vmbr0
 iface vmbr0 inet dhcp
     bridge_ports $INTERFACE
     bridge_stp off
     bridge_fd 0
-
 EOF
 
             break 2
@@ -136,13 +103,11 @@ EOF
     esac
 done
 
+# Reiniciar o serviço de rede para aplicar as alterações
+echo -e "${amarelo}Reiniciando o serviço de rede...${normal}"
+systemctl restart networking
 
-    # Reiniciar o serviço de rede para aplicar as alterações
-    echo -e "${amarelo}Reiniciando o serviço de rede...${normal}"
-    systemctl restart networking
-
-    echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
-}
+echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
 
 reboot()
 {
