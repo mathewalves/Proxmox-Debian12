@@ -112,6 +112,7 @@ EOF
     # Reiniciar o serviço de rede para aplicar as alterações
     echo -e "${amarelo}Reiniciando o serviço de rede...${normal}"
     systemctl restart networking
+    ip link set dev vmbr0 up
 
     echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
 }
