@@ -105,10 +105,6 @@ EOF
 
         "Usar DHCP")
             # Configuração para DHCP
-            # Atualizar o arquivo de configuração
-            echo "INTERFACE=$INTERFACE" > "$config_file"
-            echo "IP_ADDRESS=" >> "$config_file"  # Remover o IP se estiver presente
-            echo "GATEWAY=" >> "$config_file"     # Remover o GATEWAY se estiver presente
 
             # Criar a bridge vmbr0 com as novas informações
 cat <<EOF >> $script_proxmox_file
