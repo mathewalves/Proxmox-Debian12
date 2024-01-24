@@ -117,14 +117,6 @@ EOF
     echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
 }
 
-reboot()
-{
-    echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
-    echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário.${normal}"
-    echo -e "${amarelo}Reiniciando o Sistema...${normal}"
-    sleep 5
-    systemctl reboot
-}
 
 main()
 {
@@ -133,11 +125,16 @@ main()
     echo -e "${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
     read -p "Resposta: " perguntar_reboot
 
-    perguntar_reboot=$(echo "$resposta" | tr '[:upper:]' '[:lower:]')
+    perguntar_reboot=$(echo "$perguntar_reboot" | tr '[:upper:]' '[:lower:]')
 
     if [ "$perguntar_reboot" == "s" ]; then
-        reboot
+        echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
+        echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário.${normal}"
+        echo -e "${amarelo}Reiniciando o Sistema...${normal}"
+        sleep 5
+        systemctl reboot
     fi
+
     echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
     echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário!${normal}"
     sleep 5
