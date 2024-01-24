@@ -137,28 +137,27 @@ main()
 
     if [ "$perguntar_reboot" == "s" ]; then
         reboot
-    else
-        echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
-        echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário!${normal}"
-        sleep 5
-        cd /
-        clear
-        # Verificar se o comando neofetch está instalado
-        if command -v neofetch &> /dev/null; then
-            neofetch
-        fi
-        # Obtendo o endereço IP
-        ip=$(hostname -I | cut -d' ' -f1)
-
-        # Número da porta padrão do Proxmox
-        porta_proxmox=8006
-
-        # Mensagem de boas-vindas
-        echo -e "${ciano}Para acessar a interface do Proxmox, abra um navegador e digite:"
-        echo -e "${azul}https://$ip:$porta_proxmox/${normal}"
-        echo -e "${verde}Usuário: root"
-        echo -e "Senha: (a senha do root)${normal}"
     fi
+    echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
+    echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário!${normal}"
+    sleep 5
+    cd /
+    clear
+    # Verificar se o comando neofetch está instalado
+    if command -v neofetch &> /dev/null; then
+        neofetch
+    fi
+    # Obtendo o endereço IP
+    ip=$(hostname -I | cut -d' ' -f1)
+
+    # Número da porta padrão do Proxmox
+    porta_proxmox=8006
+
+    # Mensagem de boas-vindas
+    echo -e "${ciano}Para acessar a interface do Proxmox, abra um navegador e digite:"
+    echo -e "${azul}https://$ip:$porta_proxmox/${normal}"
+    echo -e "${verde}Usuário: root"
+    echo -e "Senha: (a senha do root)${normal}"
 }
 
 main
