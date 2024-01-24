@@ -6,47 +6,29 @@ if [ "$(whoami)" != "root" ]; then
     exit $?
 fi
 
+# Caminho para o arquivo script_proxmox no diretório /etc/network/interfaces.d/
+script_proxmox_file="/etc/network/interfaces.d/script_proxmox"
+
 interface_old() 
 {
-    # Verificar se já existe um arquivo interfaces.old
-    if [ -f "/etc/network/interfaces.old" ]; then
-        echo "Arquivo interfaces.old já existe. Pulando essa parte."
+
+    # Verificar se o arquivo script_proxmox já existe
+    if [ -e "$script_proxmox_file" ]; then
+        # Se o arquivo existir, limpe o conteúdo
+        echo "" > "$script_proxmox_file"
     else
-        # Renomear /etc/network/interfaces para interfaces.old
-        mv /etc/network/interfaces /etc/network/interfaces.old
+        # Se o arquivo não existir, crie-o
+        touch "$script_proxmox_file"
+    fi
 
-        # Criar um novo arquivo interfaces com as informações relevantes
-        cat <<EOF > /etc/network/interfaces
+    # Criar um novo arquivo interfaces com as informações relevantes
+    cat <<EOF > $script_proxmox_file
 # Este arquivo de configuração foi gerado automaticamente pelo script de instalação do PROXMOX
-# Seu arquivo de configuração antigo foi renomeado e salvo como 'interfaces.old'
-# Caso deseja voltar as configurações antigas exclua este script e renomei o 'interfaces.old' para 'interfaces'
-
-source /etc/network/interfaces.d/*
-
-# Loopback
-auto lo
-iface lo inet loopback
 
 # Suas interfaces:
 
 
 EOF
-
-        echo "Arquivo interfaces.old criado com sucesso."
-    fi
-}
-
-verificar_bridge()
-{
-    # Verificar se a bridge vmbr0 já existe
-    if grep -q "iface vmbr0" /etc/network/interfaces; then
-        echo "A bridge vmbr0 já existe. Reconfigurando..."
-        
-        # Remover a configuração existente, incluindo a linha 'auto vmbr0'
-        sed -i '/auto vmbr0/,/iface vmbr0/,/^$/d' /etc/network/interfaces
-    else
-        echo "Criando a bridge vmbr0..."
-    fi
 }
 
 bridge()
@@ -70,7 +52,6 @@ bridge()
     echo "Endereço IP / NETMASK: $IP_ADDRESS"
     echo "Gateway: $GATEWAY"
 
-    verificar_bridge
 
     # Utilizar as variáveis lidas do arquivo ou solicitar novas se estiverem em branco
     echo -e "Configurando as informações da interface de rede para criação da bridge..."
@@ -103,9 +84,9 @@ bridge()
             echo "GATEWAY=$GATEWAY" >> "$config_file"
 
             # Criar a bridge vmbr0 com as novas informações
-            cat <<EOF >> /etc/network/interfaces
+            cat <<EOF >> script_proxmox_file
 # Configurações da Interface Física
-auto $INTERFACE
+# auto $INTERFACE
 # iface $INTERFACE inet manual
 
 # Configurações da Bridge vmbr0
@@ -130,9 +111,9 @@ EOF
             echo "GATEWAY=" >> "$config_file"     # Remover o GATEWAY se estiver presente
 
             # Criar a bridge vmbr0 com as novas informações
-            cat <<EOF >> /etc/network/interfaces
+            cat <<EOF >> script_proxmox_file
 # Configurações da Interface Física
-auto $INTERFACE
+# auto $INTERFACE
 # iface $INTERFACE inet dhcp
 
 # Configurações da Bridge vmbr0 para DHCP
