@@ -1,38 +1,49 @@
 # Proxmox-Debian12
-```bash                                                      _               
-  _ __  _ __ _____  ___ __ ___   _____  __    ___  ___| |_ _   _ _ __  
- | '_ \| '__/ _ \ \/ / '_ ` _ \ / _ \ \/ /   / __|/ _ \ __| | | | '_ \ 
- | |_) | | | (_) >  <| | | | | | (_) >  <    \__ \  __/ |_| |_| | |_) |
- | .__/|_|  \___/_/\_\_| |_| |_|\___/_/\_\___|___/\___|\__|\__,_| .__/ 
- |_|                                    |_____|                 |_|    
+```bash
+                                                                               _               
+                          _ __  _ __ _____  ___ __ ___   _____  __    ___  ___| |_ _   _ _ __  
+                         | '_ \| '__/ _ \ \/ / '_ ` _ \ / _ \ \/ /   / __|/ _ \ __| | | | '_ \ 
+                         | |_) | | | (_) >  <| | | | | | (_) >  <    \__ \  __/ |_| |_| | |_) |
+                         | .__/|_|  \___/_/\_\_| |_| |_|\___/_/\_\___|___/\___|\__|\__,_| .__/ 
+                         |_|                                    |_____|                 |_|    
 ```
 
-Este script automatiza a instalação do Proxmox sobre o Debian 12 e a criação da bridge para facilitar a configuração de redes.
+Este setup/script automatiza a instalação do Proxmox sobre o Debian 12 e a criação da bridge para facilitar a configuração de redes.
 
 **Nota: Este script foi projetado para ser executado em um sistema Debian 12. Certifique-se de ter permissões de superusuário antes de executar o script.**
 
 ## Requisitos
 
 - Debian 12 instalado
-- Git instalado
 - Permissões de superusuário
+  ```bash
+  su root
+  ```
+- Git instalado
+  ```bash
+  apt install git
+  ```
 
 ## Instruções de Uso
 
-1. Baixe o script para o seu sistema Debian 12.
+1. Baixe o repositório para o seu sistema Debian 12.
 ```bash
+# Ir para o repositório raiz do seu Debian 12 (Importante)
 cd /
+
+# Com o git já instalado na sua máquina clone o repositório
 git clone https://github.com/mathewalves/Proxmox-Debian12.git
+
+# Acesse a pasta baixada com o comando 'cd'
 cd /Proxmox-Debian12
-chmod +x ./setup.bash
-./setup.bash
 ```
 2. Torne o script executável.
 ```bash
+# Dá permissão de execução para o setup
 chmod +x ./setup.bash
 ```
 
-3. Execute o script.
+3. Execute o setup.
 ```bash
 ./setup.bash
 ```
@@ -59,7 +70,7 @@ Certifique-se de revisar a documentação oficial de cada pacote para obter mais
 
 ## Atualizações e Suporte
 
-Para obter suporte ou relatar problemas, [abra uma issue](https://github.com/seu-usuario/proxmox-debian12/issues).
+Para obter suporte ou relatar problemas, [abra uma issue](https://github.com/mathewalves/Proxmox-Debian12/issues).
 
 ## Licença
 
