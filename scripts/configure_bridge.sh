@@ -140,16 +140,21 @@ remove_start-script()
 welcome()
 {
     hostname=$(hostname)
-    echo -e "${ciano}+--------------------------+${normal}"
-    echo -e "${ciano}|   ${verde}Bem-vindo, ${hostname}!   ${ciano}|${normal}"
-    echo -e "${ciano}+--------------------------+${normal}"   
+    echo -e "${ciano}+----------------------------+${normal}"
+    echo -e "${ciano} ${verde}Bem-vindo, ${hostname}!"
+    echo -e "${ciano}+-----------------------------+${normal}"   
 
  # Função para extrair a versão do Proxmox
    get_proxmox_version() 
    {
-        local version_file="/etc/pve/.version"
-        if [ -f "$version_file" ]; then
-            cat "$version_file" | grep -oP '\d+\.\d+'  # Extrai apenas os dígitos e o ponto
+        local proxmox_package="proxmox-ve"
+        local version
+
+        # Obtém a versão do pacote Proxmox
+        version=$(dpkg-query -W -f='${Version}' "$proxmox_package" 2>/dev/null)
+
+        if [ -n "$version" ]; then
+            echo "Versão do Proxmox: $version"
         else
             echo "Versão não encontrada"
         fi
@@ -167,6 +172,7 @@ welcome()
 
     if command -v neofetch &> /dev/null; then
         echo -e "${ciano}Especificações do seu sistema:${normal}"
+        echo ""
         neofetch
     fi
 
@@ -178,12 +184,12 @@ welcome()
 
    # Mensagem de boas-vindas
     echo ""
-    echo -e "${ciano}+--------------------------+${normal}"
-    echo -e "${ciano}| Para acessar a interface do Proxmox, abra um navegador e digite: |${normal}"
-    echo -e "${ciano}|     ${azul}https://$ip:$porta_proxmox/${normal}                |"
-    echo -e "${ciano}|   ${amarelo}Usuário: root              ${ciano}|${normal}"
-    echo -e "${ciano}|   ${amarelo}Senha: (a senha do root)   ${ciano}|${normal}"
-    echo -e "${ciano}+--------------------------+${normal}"
+    echo -e "${ciano}+--------------------------------------------------------------+${normal}"
+    echo -e "${ciano} Para acessar a interface do Proxmox, abra um navegador e digite: |${normal}"
+    echo -e "${ciano}           ${azul}https://$ip:$porta_proxmox/${normal}"
+    echo -e "${ciano}                   ${amarelo}Usuário: root"
+    echo -e "${ciano}                   ${amarelo}Senha: (a senha do root) "
+    echo -e "${ciano}+--------------------------------------------------------------+${normal}"
 }
 
 main()
