@@ -147,11 +147,11 @@ welcome()
  # Função para extrair a versão do Proxmox
    get_proxmox_version() 
    {
-        local version_file="/etc/pve/.version"
+        local pve_version_cmd="/usr/bin/pveversion"
         local version
 
-        # Obtém a versão diretamente do arquivo .version
-        version=$(cat "$version_file" 2>/dev/null)
+        # Obtém a versão usando o comando pveversion
+        version=$("$pve_version_cmd" | awk '/pve-manager/ {print $3}' 2>/dev/null)
 
         if [ -n "$version" ]; then
             echo -e "${verde}$version${vermelho}"
