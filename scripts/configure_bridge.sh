@@ -186,15 +186,16 @@ ${normal}"
 
 adicionar_welcome()
 {
-    # Desativar o serviço pvebanner
-    systemctl disable pvebanner
+    # Caminho para o arquivo /etc/issue
+    issue_file="/etc/issue"
+
+    # Desativa o serviço pvebanner
     systemctl stop pvebanner
+    systemctl disable pvebanner
 
-    # Criar script de boas-vindas personalizado
-    welcome_script="/usr/bin/custom_welcome"
-
-cat <<EOL > "$welcome_script"
-  #!/bin/bash
+# Mensagem de boas-vindas personalizada
+custom_welcome_message=$(cat <<EOL
+    #!/bin/bash
 
     # colors.conf
     ciano='\e[1;96m'
@@ -238,30 +239,13 @@ cat <<EOL > "$welcome_script"
 
 ${normal}"
 EOL
-chmod +x "$welcome_script"
+)
 
-    # Criar arquivo de serviço personalizado
-    service_file="/etc/systemd/system/custom_welcome.service"
-cat <<EOL > "$service_file"
-[Unit]
-Description=Custom Welcome Message
-After=network.target
+    # Adiciona a mensagem de boas-vindas ao arquivo /etc/issue
+    echo -e "$custom_welcome_message" | tee "$issue_file" > /dev/null
 
-[Service]
-ExecStart=/usr/bin/custom_welcome
-
-[Install]
-WantedBy=multi-user.target
-EOL
-
-    # Recarregar serviços do systemd
-    systemctl daemon-reload
-
-    # Iniciar e ativar o novo serviço
-    systemctl start custom_welcome
-    systemctl enable custom_welcome
-
-    echo "A mensagem de boas-vindas padrão do Proxmox foi desativada, e a mensagem personalizada está em execução."
+    # Exibe a mensagem de confirmação
+    echo "A mensagem de boas-vindas personalizada foi configurada com sucesso!"
 }
 
 main()
