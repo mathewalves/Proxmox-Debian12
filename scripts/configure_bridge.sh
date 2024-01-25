@@ -147,16 +147,16 @@ welcome()
  # Função para extrair a versão do Proxmox
    get_proxmox_version() 
    {
-        local version_file="/usr/share/perl5/PVE/API2/Version.pm"
+        local pve_version_cmd="/usr/bin/pveversion"
         local version
 
-        # Obtém a versão diretamente do arquivo Version.pm
-        version=$(grep -oP "our \$version = '\K\d+\.\d+" "$version_file" 2>/dev/null)
+        # Obtém a versão usando o comando pveversion
+        version=$("$pve_version_cmd" -v 2>/dev/null | grep -oP "pve-manager/\K\d+\.\d+" 2>/dev/null)
 
         if [ -n "$version" ]; then
-            echo "$version"
+            echo -e "${verde}$version${normal}"
         else
-            echo "."
+            echo "${laranja}.${normal}"
         fi
     }
 
@@ -165,7 +165,7 @@ welcome()
      ____  _________  _  ______ ___  ____  _  __
     / __ \/ ___/ __ \| |/_/ __ \`__ \/ __ \| |/_/
    / /_/ / /  / /_/ />  </ / / / / / /_/ />  <  
-  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  ${laranja}$(get_proxmox_version)${vermelho}
+  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  $(get_proxmox_version)
  /_/              
 
  ${normal}"               
