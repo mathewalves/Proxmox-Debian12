@@ -174,7 +174,7 @@ welcome()
 ${normal}"
 }
 
-adicionar_welcome
+adicionar_welcome()
 {
     # Caminho para o arquivo /etc/issue
     issue_file="/etc/issue"
