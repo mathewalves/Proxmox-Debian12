@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Proxmox Setup v1.0.0
+# by: Matheew Alves
+
 cd /Proxmox-Debian12
 source ./configs/colors.conf
 

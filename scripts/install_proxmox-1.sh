@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Proxmox Setup v1.0.0
+# by: Matheew Alves
+
 cd /Proxmox-Debian12
 
 # Carregar as variáveis de cores do arquivo colors.conf
