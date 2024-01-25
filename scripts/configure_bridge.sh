@@ -176,11 +176,10 @@ ${normal}"
 
 adicionar_welcome
 {
-    welcome_message=$(welcome)
     # Caminho para o arquivo /etc/issue
     issue_file="/etc/issue"
     # Adiciona a mensagem de boas-vindas ao arquivo /etc/issue
-    echo "$welcome_message" | tee "$issue_file" > /dev/null
+    welcome > "$issue_file" 2>/dev/null
 
     # Exibe a mensagem de confirmação
     echo -e "${verde}A mensagem de boas-vindas foi atualizada com sucesso!${normal}"
