@@ -186,14 +186,82 @@ ${normal}"
 
 adicionar_welcome()
 {
-    welcome_message=$(welcome)
-    # Caminho para o arquivo /etc/issue
-    issue_file="/etc/issue"
-    # Adiciona a mensagem de boas-vindas ao arquivo /etc/issue
-    echo -e "$welcome_message" | tee /usr/bin/pvebanner > /dev/null
+    # Desativar o serviço pvebanner
+    systemctl disable pvebanner
+    systemctl stop pvebanner
 
-    # Exibe a mensagem de confirmação
-    echo -e "${verde}A mensagem de boas-vindas foi atualizada com sucesso!${normal}"
+    # Criar script de boas-vindas personalizado
+    welcome_script="/usr/bin/custom_welcome"
+
+cat <<EOL > "$welcome_script"
+  #!/bin/bash
+
+    # colors.conf
+    ciano='\e[1;96m'
+    azul='\e[;94m'
+    normal='\e[0m'
+    vermelho='\e[1;91m'
+    amarelo='\e[1;93m'
+    verde='\e[1;32m'
+
+    hostname=$(hostname)
+    echo -e "${ciano} ${verde}Bem-vindo, ${hostname}!"   
+
+    # Bloco ASCII art
+    echo -e "${vermelho}
+     ____  _________  _  ______ ___  ____  _  __
+    / __ \/ ___/ __ \| |/_/ __ \`__ \/ __ \| |/_/
+   / /_/ / /  / /_/ />  </ / / / / / /_/ />  <  
+  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  ${amarelo}https://pve.proxmox.com/${vermelho}
+ /_/              
+
+ ${normal}"               
+
+    if command -v neofetch &> /dev/null; then
+        echo ""
+        neofetch
+    fi
+
+    # Obtendo o endereço IP
+    ip=$(hostname -I | cut -d' ' -f1)
+
+    # Número da porta padrão do Proxmox
+    porta_proxmox=8006
+
+   # Mensagem de boas-vindas
+    echo -e "${amarelo}
+  +---------------------------------------------------------------------+
+  |   Para acessar a interface do ${vermelho}Proxmox${amarelo}, abra um navegador e digite:  |
+ ###                    ${azul}https://$ip:$porta_proxmox/${amarelo}                  ###
+  |                 Usuário: ${verde}root${amarelo} | Senha: ${verde}(a senha do root)${amarelo}            |
+  +---------------------------------------------------------------------+
+
+${normal}"
+EOL
+chmod +x "$welcome_script"
+
+    # Criar arquivo de serviço personalizado
+    service_file="/etc/systemd/system/custom_welcome.service"
+cat <<EOL > "$service_file"
+[Unit]
+Description=Custom Welcome Message
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/custom_welcome
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+    # Recarregar serviços do systemd
+    systemctl daemon-reload
+
+    # Iniciar e ativar o novo serviço
+    systemctl start custom_welcome
+    systemctl enable custom_welcome
+
+    echo "A mensagem de boas-vindas padrão do Proxmox foi desativada, e a mensagem personalizada está em execução."
 }
 
 main()
