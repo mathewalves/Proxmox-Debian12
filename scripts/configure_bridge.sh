@@ -145,11 +145,11 @@ welcome()
     echo -e "${ciano}+--------------------------+${normal}"   
 
  # Função para extrair a versão do Proxmox
-    get_proxmox_version() 
-    {
+   get_proxmox_version() 
+   {
         local version_file="/etc/pve/.version"
         if [ -f "$version_file" ]; then
-            cat "$version_file"
+            cat "$version_file" | grep -oP '\d+\.\d+'  # Extrai apenas os dígitos e o ponto
         else
             echo "Versão não encontrada"
         fi
