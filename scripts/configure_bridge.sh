@@ -137,115 +137,30 @@ remove_start-script()
     done
 }
 
-welcome()
+add_welcome()
 {
-    #!/bin/bash
+    for user_home in /home/*; do
+        PROFILE_FILE="$user_home/.bashrc"
+        
+        # Verifica se o arquivo de perfil existe antes de adicionar
+        if [ -f "$PROFILE_FILE" ]; then
+            # Adiciona a linha de execução do script ao final do arquivo
+            echo "" >> "$PROFILE_FILE"
+            echo "# Executar script após o login" >> "$PROFILE_FILE"
+            echo "/Proxmox-Debian12/scripts/custom_welcome.sh" >> "$PROFILE_FILE"
+            echo "" >> "$PROFILE_FILE"
 
-    # colors.conf
-    ciano='\e[1;96m'
-    azul='\e[;94m'
-    normal='\e[0m'
-    vermelho='\e[1;91m'
-    amarelo='\e[1;93m'
-    verde='\e[1;32m'
+            echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
+        fi
 
-    hostname=$(hostname)
-    echo -e "${ciano} ${verde}Bem-vindo, ${hostname}!"   
+        # Adicione as seguintes linhas ao final do arquivo /root/.bashrc
+        echo "" >> /root/.bashrc
+        echo "# Executar script após o login" >> /root/.bashrc
+        echo "/Proxmox-Debian12/scripts/custom_welcome.sh" >> /root/.bashrc
+        echo "" >> /root/.bashrc
 
-    # Bloco ASCII art
-    echo -e "${vermelho}
-     ____  _________  _  ______ ___  ____  _  __
-    / __ \/ ___/ __ \| |/_/ __ \`__ \/ __ \| |/_/
-   / /_/ / /  / /_/ />  </ / / / / / /_/ />  <  
-  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  ${amarelo}https://pve.proxmox.com/${vermelho}
- /_/              
-
- ${normal}"               
-
-    if command -v neofetch &> /dev/null; then
-        echo ""
-        neofetch
-    fi
-
-    # Obtendo o endereço IP
-    ip=$(hostname -I | cut -d' ' -f1)
-
-    # Número da porta padrão do Proxmox
-    porta_proxmox=8006
-
-   # Mensagem de boas-vindas
-    echo -e "${amarelo}
-  +---------------------------------------------------------------------+
-  |   Para acessar a interface do ${vermelho}Proxmox${amarelo}, abra um navegador e digite:  |
- ###                    ${azul}https://$ip:$porta_proxmox/${amarelo}                  ###
-  |                 Usuário: ${verde}root${amarelo} | Senha: ${verde}(a senha do root)${amarelo}            |
-  +---------------------------------------------------------------------+
-
-${normal}"
-}
-
-adicionar_welcome()
-{
-    # Caminho para o arquivo /etc/issue
-    issue_file="/etc/issue"
-
-    # Desativa o serviço pvebanner
-    systemctl stop pvebanner
-    systemctl disable pvebanner
-
-# Mensagem de boas-vindas personalizada
-custom_welcome_message=$(cat <<EOL
-    #!/bin/bash
-
-    # colors.conf
-    ciano='\e[1;96m'
-    azul='\e[;94m'
-    normal='\e[0m'
-    vermelho='\e[1;91m'
-    amarelo='\e[1;93m'
-    verde='\e[1;32m'
-
-    hostname=$(hostname)
-    echo -e "${ciano} ${verde}Bem-vindo, ${hostname}!"   
-
-    # Bloco ASCII art
-    echo -e "${vermelho}
-     ____  _________  _  ______ ___  ____  _  __
-    / __ \/ ___/ __ \| |/_/ __ \`__ \/ __ \| |/_/
-   / /_/ / /  / /_/ />  </ / / / / / /_/ />  <  
-  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  ${amarelo}https://pve.proxmox.com/${vermelho}
- /_/              
-
- ${normal}"               
-
-    if command -v neofetch &> /dev/null; then
-        echo ""
-        neofetch
-    fi
-
-    # Obtendo o endereço IP
-    ip=$(hostname -I | cut -d' ' -f1)
-
-    # Número da porta padrão do Proxmox
-    porta_proxmox=8006
-
-   # Mensagem de boas-vindas
-    echo -e "${amarelo}
-  +---------------------------------------------------------------------+
-  |   Para acessar a interface do ${vermelho}Proxmox${amarelo}, abra um navegador e digite:  |
- ###                    ${azul}https://$ip:$porta_proxmox/${amarelo}                  ###
-  |                 Usuário: ${verde}root${amarelo} | Senha: ${verde}(a senha do root)${amarelo}            |
-  +---------------------------------------------------------------------+
-
-${normal}"
-EOL
-)
-
-    # Adiciona a mensagem de boas-vindas ao arquivo /etc/issue
-    echo -e "$custom_welcome_message" | tee "$issue_file" > /dev/null
-
-    # Exibe a mensagem de confirmação
-    echo "A mensagem de boas-vindas personalizada foi configurada com sucesso!"
+        echo "Configuração automática concluída para o usuário root."
+    done
 }
 
 main()
@@ -255,9 +170,7 @@ main()
     echo -e "...${normal}"
     configure_bridge
     remove_start-script
-
-    adicionar_welcome
-
+    add_welcome
     echo -e "${amarelo}(Opcional)${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
     read -p "Resposta: " perguntar_reboot
 
@@ -276,10 +189,9 @@ main()
     echo -e "${amarelo}Você pode configurar a bridge vmbr0 posteriormente executando o script ${ciano}/Proxmox-Debian12/scripts/configure_bridge.sh${amarelo}"
     echo -e ", manualmente ou através da interface web do Proxmox. Consulte a documentação do Proxmox para mais informações.${normal}"
     sleep 5
-    cd /
     clear
 
-    welcome
+    ./custom_welcome
 }
 
 main
