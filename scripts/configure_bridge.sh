@@ -140,32 +140,14 @@ remove_start-script()
 welcome()
 {
     hostname=$(hostname)
-    echo -e "${ciano}+----------------------------+${normal}"
-    echo -e "${ciano} ${verde}Bem-vindo, ${hostname}!"
-    echo -e "${ciano}+-----------------------------+${normal}"   
-
- # Função para extrair a versão do Proxmox
-   get_proxmox_version() 
-   {
-        local pve_version_cmd="/usr/bin/pveversion"
-        local version
-
-        # Obtém a versão usando o comando pveversion
-        version=$("$pve_version_cmd" | awk '/pve-manager/ {print $3}' 2>/dev/null)
-
-        if [ -n "$version" ]; then
-            echo -e "${verde}$version${vermelho}"
-        else
-            echo "${laranja}.${vermelho}"
-        fi
-    }
+    echo -e "${ciano} ${verde}Bem-vindo, ${hostname}!"   
 
     # Bloco ASCII art
     echo -e "${vermelho}
      ____  _________  _  ______ ___  ____  _  __
     / __ \/ ___/ __ \| |/_/ __ \`__ \/ __ \| |/_/
    / /_/ / /  / /_/ />  </ / / / / / /_/ />  <  
-  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  $(get_proxmox_version)
+  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  ${amarelo}system:${vermelho}
  /_/              
 
  ${normal}"               
@@ -182,13 +164,14 @@ welcome()
     porta_proxmox=8006
 
    # Mensagem de boas-vindas
-    echo ""
-    echo -e "${ciano}+------------------------------------------------------------------+${normal}"
-    echo -e "${ciano} Para acessar a interface do Proxmox, abra um navegador e digite:${normal}"
-    echo -e "${ciano}               ${azul}https://$ip:$porta_proxmox/${normal}"
-    echo -e "${ciano}                       ${amarelo}Usuário: root"
-    echo -e "${ciano}                       ${amarelo}Senha: (a senha do root) "
-    echo -e "${ciano}+------------------------------------------------------------------+${normal}"
+    echo -e "${amarelo}
+  +---------------------------------------------------------------------+
+  |   Para acessar a interface do Proxmox, abra um navegador e digite:  |
+ ###                      https://$ip:$porta_proxmox/                  ###
+  |                 Usuário: root | Senha: (a senha do root)            |
+  +---------------------------------------------------------------------+
+
+"
 }
 
 main()
