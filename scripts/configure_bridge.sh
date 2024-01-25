@@ -147,16 +147,16 @@ welcome()
  # Função para extrair a versão do Proxmox
    get_proxmox_version() 
    {
-        local proxmox_package="proxmox-ve"
+        local version_file="/usr/share/perl5/PVE/API2/Version.pm"
         local version
 
-        # Obtém a versão do pacote Proxmox
-        version=$(dpkg-query -W -f='${Version}' "$proxmox_package" 2>/dev/null)
+        # Obtém a versão diretamente do arquivo Version.pm
+        version=$(grep -oP "our \$version = '\K\d+\.\d+" "$version_file" 2>/dev/null)
 
         if [ -n "$version" ]; then
-            echo "Versão do Proxmox: $version"
+            echo "$version"
         else
-            echo "Versão não encontrada"
+            echo "."
         fi
     }
 
@@ -171,7 +171,6 @@ welcome()
  ${normal}"               
 
     if command -v neofetch &> /dev/null; then
-        echo -e "${ciano}Especificações do seu sistema:${normal}"
         echo ""
         neofetch
     fi
@@ -184,12 +183,12 @@ welcome()
 
    # Mensagem de boas-vindas
     echo ""
-    echo -e "${ciano}+--------------------------------------------------------------+${normal}"
-    echo -e "${ciano} Para acessar a interface do Proxmox, abra um navegador e digite: |${normal}"
-    echo -e "${ciano}           ${azul}https://$ip:$porta_proxmox/${normal}"
-    echo -e "${ciano}                   ${amarelo}Usuário: root"
-    echo -e "${ciano}                   ${amarelo}Senha: (a senha do root) "
-    echo -e "${ciano}+--------------------------------------------------------------+${normal}"
+    echo -e "${ciano}+------------------------------------------------------------------+${normal}"
+    echo -e "${ciano} Para acessar a interface do Proxmox, abra um navegador e digite:${normal}"
+    echo -e "${ciano}               ${azul}https://$ip:$porta_proxmox/${normal}"
+    echo -e "${ciano}                       ${amarelo}Usuário: root"
+    echo -e "${ciano}                       ${amarelo}Senha: (a senha do root) "
+    echo -e "${ciano}+------------------------------------------------------------------+${normal}"
 }
 
 main()
