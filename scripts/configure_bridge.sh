@@ -139,6 +139,16 @@ remove_start-script()
 
 welcome()
 {
+    #!/bin/bash
+
+    # colors.conf
+    ciano='\e[1;96m'
+    azul='\e[;94m'
+    normal='\e[0m'
+    vermelho='\e[1;91m'
+    amarelo='\e[1;93m'
+    verde='\e[1;32m'
+
     hostname=$(hostname)
     echo -e "${ciano} ${verde}Bem-vindo, ${hostname}!"   
 
@@ -180,7 +190,7 @@ adicionar_welcome()
     # Caminho para o arquivo /etc/issue
     issue_file="/etc/issue"
     # Adiciona a mensagem de boas-vindas ao arquivo /etc/issue
-    echo "$welcome_message" | tee "$issue_file" > /dev/null
+    echo -e "$welcome_message" | tee /usr/bin/pvebanner > /dev/null
 
     # Exibe a mensagem de confirmação
     echo -e "${verde}A mensagem de boas-vindas foi atualizada com sucesso!${normal}"
