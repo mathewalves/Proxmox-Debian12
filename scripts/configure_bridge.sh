@@ -147,7 +147,7 @@ welcome()
      ____  _________  _  ______ ___  ____  _  __
     / __ \/ ___/ __ \| |/_/ __ \`__ \/ __ \| |/_/
    / /_/ / /  / /_/ />  </ / / / / / /_/ />  <  
-  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  ${amarelo}https://pve.proxmox.com/pve-docs/${vermelho}
+  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  ${amarelo}https://pve.proxmox.com/${vermelho}
  /_/              
 
  ${normal}"               
@@ -166,7 +166,7 @@ welcome()
    # Mensagem de boas-vindas
     echo -e "${amarelo}
   +---------------------------------------------------------------------+
-  |   Para acessar a interface do Proxmox, abra um navegador e digite:  |
+  |   Para acessar a interface do ${vermelho}Proxmox${amarelo}, abra um navegador e digite:  |
  ###                    ${azul}https://$ip:$porta_proxmox/${amarelo}                  ###
   |                 Usuário: ${verde}root${amarelo} | Senha: ${verde}(a senha do root)${amarelo}            |
   +---------------------------------------------------------------------+
