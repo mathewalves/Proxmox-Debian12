@@ -102,6 +102,9 @@ EOF
                 ;;
 
             "Sair")
+                remove_start-script
+                echo -e "${amarelo}Você pode configurar a bridge vmbr0 posteriormente executando o script ${ciano}/Proxmox-Debian12/scripts/configure_bridge.sh${amarelo}"
+                echo -e ", manualmente ou através da interface web do Proxmox. Consulte a documentação do Proxmox para mais informações.${normal}"
                 echo -e "${vermelho}Saindo...${normal}"
                 exit 0
                 ;;
@@ -134,6 +137,55 @@ remove_start-script()
     done
 }
 
+welcome()
+{
+    hostname=$(hostname)
+    echo -e "${ciano}+--------------------------+${normal}"
+    echo -e "${ciano}|   ${verde}Bem-vindo, ${hostname}!   ${ciano}|${normal}"
+    echo -e "${ciano}+--------------------------+${normal}"   
+
+ # Função para extrair a versão do Proxmox
+    get_proxmox_version() 
+    {
+        local version_file="/etc/pve/.version"
+        if [ -f "$version_file" ]; then
+            cat "$version_file"
+        else
+            echo "Versão não encontrada"
+        fi
+    }
+
+    # Bloco ASCII art
+    echo -e "${vermelho}
+     ____  _________  _  ______ ___  ____  _  __
+    / __ \/ ___/ __ \| |/_/ __ \`__ \/ __ \| |/_/
+   / /_/ / /  / /_/ />  </ / / / / / /_/ />  <  
+  / .___/_/   \____/_/|_/_/ /_/ /_/\____/_/|_|  ${laranja}$(get_proxmox_version)${vermelho}
+ /_/              
+
+ ${normal}"               
+
+    if command -v neofetch &> /dev/null; then
+        echo -e "${ciano}Especificações do seu sistema:${normal}"
+        neofetch
+    fi
+
+    # Obtendo o endereço IP
+    ip=$(hostname -I | cut -d' ' -f1)
+
+    # Número da porta padrão do Proxmox
+    porta_proxmox=8006
+
+   # Mensagem de boas-vindas
+    echo ""
+    echo -e "${ciano}+--------------------------+${normal}"
+    echo -e "${ciano}| Para acessar a interface do Proxmox, abra um navegador e digite: |${normal}"
+    echo -e "${ciano}|     ${azul}https://$ip:$porta_proxmox/${normal}                |"
+    echo -e "${ciano}|   ${amarelo}Usuário: root              ${ciano}|${normal}"
+    echo -e "${ciano}|   ${amarelo}Senha: (a senha do root)   ${ciano}|${normal}"
+    echo -e "${ciano}+--------------------------+${normal}"
+}
+
 main()
 {
     echo -e "${ciano}3º parte: Atualizando /etc/hosts..."
@@ -162,21 +214,8 @@ main()
     sleep 5
     cd /
     clear
-    # Verificar se o comando neofetch está instalado
-    if command -v neofetch &> /dev/null; then
-        neofetch
-    fi
-    # Obtendo o endereço IP
-    ip=$(hostname -I | cut -d' ' -f1)
 
-    # Número da porta padrão do Proxmox
-    porta_proxmox=8006
-
-    # Mensagem de boas-vindas
-    echo -e "${ciano}Para acessar a interface do Proxmox, abra um navegador e digite:"
-    echo -e "${azul}https://$ip:$porta_proxmox/${normal}"
-    echo -e "${verde}Usuário: root"
-    echo -e "Senha: (a senha do root)${normal}"
+    welcome
 }
 
 main
