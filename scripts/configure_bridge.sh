@@ -174,6 +174,18 @@ welcome()
 ${normal}"
 }
 
+adicionar_welcome
+{
+    welcome_message=$(welcome)
+    # Caminho para o arquivo /etc/issue
+    issue_file="/etc/issue"
+    # Adiciona a mensagem de boas-vindas ao arquivo /etc/issue
+    echo "$welcome_message" | tee "$issue_file" > /dev/null
+
+    # Exibe a mensagem de confirmação
+    echo -e "${verde}A mensagem de boas-vindas foi atualizada com sucesso!${normal}"
+}
+
 main()
 {
     echo -e "${ciano}3º parte: Atualizando /etc/hosts..."
@@ -181,6 +193,8 @@ main()
     echo -e "...${normal}"
     configure_bridge
     remove_start-script
+
+    adicionar_welcome
 
     echo -e "${amarelo}(Opcional)${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
     read -p "Resposta: " perguntar_reboot
