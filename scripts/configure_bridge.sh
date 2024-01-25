@@ -140,8 +140,9 @@ main()
     echo -e "Passo 1/3"
     echo -e "...${normal}"
     configure_bridge
+    remove_start-script
 
-    echo -e "${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
+    echo -e "${amarelo}(Opcional)${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
     read -p "Resposta: " perguntar_reboot
 
     perguntar_reboot=$(echo "$perguntar_reboot" | tr '[:upper:]' '[:lower:]')
