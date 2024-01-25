@@ -7,7 +7,10 @@ source ./configs/colors.conf
 
 install_proxmox-1()
 {
-    echo -e "${ciano}1º parte: Passo 1/3${normal}"
+    echo -e "${ciano}Setup Proxmox 1º parte."
+    echo -e "Passo 1/3: Atualizando /etc/hosts"
+    echo -e "...${normal}"
+
 
     # Obtendo o nome do host atual
     current_hostname=$(hostname)
@@ -110,9 +113,9 @@ install_proxmox-1()
 
 install_proxmox-2()
 {
-    
-    echo -e "${ciano}1º parte: Passo 2/3${normal}"
-    echo -e "${ciano}Adicionando o repositório do Proxmox VE...${normal}"
+    echo -e "${ciano}Setup Proxmox 1º parte."
+    echo -e "Passo 2/3: Adicionando o repositório do Proxmox VE"
+    echo -e "...${normal}"
 
     echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
 
@@ -140,8 +143,9 @@ install_proxmox-2()
 
 install_proxmox-3()
 {
-    echo -e "${ciano}1º parte: Passo 3/3"
-    echo -e "Baixando o Proxmox VE Kernel... ${normal}"
+    echo -e "${ciano}Setup Proxmox 1º parte."
+    echo -e "Passo 3/3: Baixando o Proxmox VE Kernel..."
+    echo -e "...${normal}"
 
      if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
@@ -188,7 +192,7 @@ reboot_setup()
 
     echo -e "${verde}Trabalho Salvo!${ciano}"
     echo -e "${ciano}Reiniciado o sistema automaticamente para concluir a instalação...${normal}"
-    echo -e "${amarelo}Faço o login como root após o reboot.${normal}"
+    echo -e "${amarelo}Faça o login como usuário '${ciano}root${amarelo}' após o reboot!${normal}"
 
     # Aguarda alguns segundos antes de reiniciar
     sleep 5
@@ -200,7 +204,7 @@ reboot_setup()
 main()
 {
     # Instalação do Proxmox
-    echo -e "${ciano}iniciando instalação do Proxmox${normal}"
+    echo -e "${ciano}iniciando instalação da 1ºParte do setup do Proxmox${normal}"
     install_proxmox-1
     install_proxmox-2
     install_proxmox-3

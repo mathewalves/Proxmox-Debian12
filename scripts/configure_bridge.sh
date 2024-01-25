@@ -118,31 +118,6 @@ EOF
     echo -e "${verde}A bridge vmbr0 foi criada com sucesso!${normal}"
 }
 
-perguntar_bridge()
-{
-    echo -e "${ciano}Deseja configurar a bridge vmbr0 agora?${normal}"
-    echo -e "${amarelo}Importante: caso opte por não fazer agora, será necessário configurar a bridge mais tarde${normal}..."
-
-    read -p "Configurar agora? [S/N]: " configurar_agora
-    
-    if [[ "${configurar_agora,,}" =~ ^[sS](im)?$ ]]; then
-        # Caminho do script que você deseja executar
-        script_a_executar="./scripts/configure_bridge.sh"
-
-        # Verifica se o script a ser executado existe
-        if [ -e "$script_a_executar" ]; then
-            # Executa o script
-            bash "$script_a_executar"
-        else
-            echo -e "${vermelho}Erro: O script $script_a_executar não foi encontrado.${normal}"
-        fi
-    else
-        echo -e "${amarelo}Você pode configurar a bridge vmbr0 posteriormente executando o script ${ciano}/Proxmox-Debian12/scripts/configure_bridge.sh${amarelo}"
-        echo -e "ou através da interface web do Proxmox. Consulte a documentação do Proxmox para mais informações.${normal}"
-        exit 1
-    fi
-}
-
 # Remover inicialização do script junto com o sistema
 remove_start-script() 
 {
@@ -154,14 +129,16 @@ remove_start-script()
         echo -e "${azul}Removida a configuração do perfil para o usuário:${ciano} $(basename "$user_home").${normal}"
 
        # Remover as linhas adicionadas ao /root/.bashrc
-        sed -i '/# Executar script após o login/,/\/Proxmox-Debian12\/scripts\/install_proxmox-2.sh/d' /root/.bashrc
+        sed -i '/# Executar script após o login/,/\/Proxmox-Debian12\/scripts\/configure_bridge.sh/d' /root/.bashrc
         echo -e "${azul}Removida a configuração automática do script no /root/.bashrc.${normal}"
     done
 }
 
 main()
 {
-    perguntar_bridge
+    echo -e "${ciano}3º parte: Atualizando /etc/hosts..."
+    echo -e "Passo 1/3"
+    echo -e "...${normal}"
     configure_bridge
 
     echo -e "${ciano}Deseja reiniciar o computador agora? [S/N]${normal}"
@@ -179,6 +156,8 @@ main()
 
     echo -e "${verde}Instalação e configuração de rede do Proxmox concluída com sucesso!${normal}"
     echo -e "${amarelo}Lembre-se de configurar o Proxmox conforme necessário!${normal}"
+    echo -e "${amarelo}Você pode configurar a bridge vmbr0 posteriormente executando o script ${ciano}/Proxmox-Debian12/scripts/configure_bridge.sh${amarelo}"
+    echo -e ", manualmente ou através da interface web do Proxmox. Consulte a documentação do Proxmox para mais informações.${normal}"
     sleep 5
     cd /
     clear

@@ -55,7 +55,9 @@ configure_bridge()
 
 proxmox-ve_packages()
 {
-    echo -e "${ciano}1º parte: Passo 1/3${normal}"
+    echo -e "${ciano}Setup Proxmox 2º parte."
+    echo -e "${ciano}Passo 1/3: Proxmox VE packages"
+    echo -e "...${normal}"
     if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala install -y proxmox-ve postfix open-iscsi chrony
@@ -68,8 +70,9 @@ proxmox-ve_packages()
 # Remover kernel do Debian
 remove_kernel()
 {
-    echo -e "${ciano}2º parte: Passo 2/3${normal}"
-    echo -e "${ciano}Removendo Kernel do Debian 12 p/ o Proxmox...${normal}"
+    echo -e "${ciano}Setup Proxmox 2º parte."
+    echo -e "Passo 2/3: Removendo kernel antigo"
+    echo -e "...${normal}"
     if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala remove -y linux-image-amd64 'linux-image-6.1*'
@@ -83,8 +86,9 @@ remove_kernel()
 
 remove_os-prober()
 {
-    echo -e "${ciano}2º parte: Passo 3/3${normal}"
-    echo -e "${ciano}Removendo os prober...${normal}"
+    echo -e "${ciano}Setup Proxmox 2º parte."
+    echo -e "${ciano}Passo 3/3: Removendo os-prober"
+    echo -e "...${normal}"
    if command -v nala &> /dev/null; then
         # Executar com 'nala' se estiver instalado
         nala remove -y os-prober
@@ -110,7 +114,7 @@ main()
     configure_bridge  
 
     echo -e "${ciano}Reiniciado o sistema automaticamente para concluir a instalação...${normal}"
-    echo -e "${amarelo}Faço o login como root após o reboot.${normal}"
+    echo -e "${amarelo}Faça o login como usuário '${ciano}root${amarelo}' após o reboot!${normal}"
     
 
     # Aguarda alguns segundos antes de reiniciar
