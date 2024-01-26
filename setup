@@ -1,116 +1,119 @@
 #!/bin/bash
-cd /Proxmox-Debian12
-clear
-# Carregar as variáveis de cores do arquivo colors.conf
-source ./configs/colors.conf
-# Tornando-se root
-if [ "$(whoami)" != "root" ]; then
-    echo -e "${ciano}Tornando-se superusuário...${normal}"
-    sudo -E bash "$0" "$@"  # Executa o script como root
-    exit $?
-fi
 
-chmod +x scripts/*
-chmod +rw configs/*
+# Proxmox Setup v1.0.1
+# by: Matheew Alves
 
-# Função para instalar sudo
-install_sudo() 
+cd /Proxmox-Debian12 && clear
+
+# Load configs files // Carregar os arquivos de configuração
+source ./configs/*
+
+# Function to display the language choice menu // Função para exibir o menu de escolha de linguagem
+show_language_menu() 
 {
-    echo -e "${ciano}Iniciando instalação do sudo...${normal}"
-    nala install -y sudo
+    whiptail --title "Language Selection" --menu "Select your preferred language:" 15 40 2 \
+        1 "Português Brasileiro" \
+        2 "English" 2>tempfile
 
-    echo -e "${azul}Procurando usuários para adicionar permissões sudo...${normal}"
+    choice=$(cat tempfile)
+    rm -f tempfile
 
-    # Lista todos os usuários do sistema com permissões de sudo
-    all_sudo_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1)
+    # Ask user for language preference // Perguntar ao usuário a preferência de linguagem
+    case $choice in
+        1)
+            language="pt-br"
+            ;;
+        2)
+            language="en"
+            ;;
+        *)
+            echo -e "${red}Canceling the installation...${default}"
+            exit 1
+            ;;
+        esac
 
-    # Pergunta ao usuário se deseja adicionar permissões de sudo
-    PS3="Selecione um usuário para adicionar permissões de sudo ou digite 'pular' para pular: "
-    select novo_sudo_user in $all_sudo_users; do
-        if [[ -n "$novo_sudo_user" ]]; then
-            # Verifica se o usuário selecionado já tem permissões de sudo
-            if id "$novo_sudo_user" &>/dev/null && groups "$novo_sudo_user" | grep -qw sudo; then
-                echo -e "${azul}O usuário ${ciano}$novo_sudo_user${azul} já possui permissões de sudo. Nenhuma ação necessária.${normal}"
-            else
-                sed -i "/^sudo/s/$/$novo_sudo_user/" /etc/group
-                echo -e "${verde}Permissões de sudo atualizadas para o usuário:${ciano} $novo_sudo_user${normal}."
-            fi
-        else
-            echo "${amarelo}Permissões de sudo não foram alteradas.${normal}"
-        fi
-        break
-    done
+        # Save the language choice in the setup_language.conf file // Salvar a escolha da linguagem no arquivo setup_language.conf
+    echo "LANGUAGE=$language" > ./configs/language.conf
+
+    echo -e "\nLanguage preference set to $language."
 }
 
-# Função para instalar o nala
-install_nala() 
+# Prerequisites // Pré-Requisitos
+super_user()
 {
-    echo -e "${ciano}Iniciando a instalação do 'nala'...${normal}"
-    apt install -y nala
-    echo -e "${verde}'nala' instalado com sucesso!${normal}"
-}
-
-# Função para instalar o neofetch
-install_neofetch() 
-{
-    echo -e "${ciano}Iniciando a instalação do 'neofetch' com o nala...${normal}"
-    nala install -y neofetch
-    echo -e "${verde}'neofetch' instalado com sucesso!${normal}"
-}
-
-# Função para instalar ferramentas de rede
-install_network_tools() 
-{
-    echo -e "${ciano}Iniciando a instalação do 'net-tools' & 'nmap' com o nala...${normal}"
-    nala install -y nmap && nala install -y net-tools
-    echo -e "${verde}Pacotes instalados com sucesso!${normal}"
-}
-
-# Função para atualizar o sistema
-update_system() 
-{
-    echo -e "${ciano}Atualizando o sistema...${normal}"
-    if [ "$resposta" == "sim" ]; then
-        nala update && nala upgrade
-    else
-        apt-get update && apt-get upgrade
+    # Becoming root // Tornando-se root
+    if [ "$(whoami)" != "root" ]; then
+        echo -e "${ciano}Log in as superuser...${default}"
+        sudo -E bash "$0" "$@"  # Run the script as root // Executa o script como root
+        exit $?
     fi
-    echo -e "${verde}Atualização feita com sucesso!${normal}"
+
+    chmod +x scripts/*
+    chmod +rw configs/*
 }
-   
-main()
+
+# Welcome
+welcome()
 {
-    # Emoji ASCII
-    echo -e "${ciano}                                                             _                 "
-    echo -e "${ciano}  _ __  _ __ _____  ___ __ ___   _____  __          ___  ___| |_ _   _ _ __ "
-    echo -e "${ciano} | '_ \| '__/ _ \ \/ / '_ \` _ \ / _ \ \/ /         / __|/ _ \ __| | | | _  \\"
-    echo -e "${ciano} | |_) | | | (_) >  <| | | | | | (_) >  <          \__ \  __/ |_| |_| | |_) |"
-    echo -e "${ciano} | .__/|_|  \___/_/\_\_| |_| |_|\___/_/\_\  _____  |___/\___|\__|\__,_| .__/"
-    echo -e "${ciano} |_|                                       |_____|                    |_|    "  
-    echo -e "\e[0m"
-    
+    # Welcome with Style
+    echo -e "${cyan}            Script developed by: \e[1;92mhttps://github.com/mathewalves${normal}." && sleep 0.5
+    echo ""
+    echo ""
+    echo -e "${cyan} --> Welcome to the Proxmox Installation Script on Debian 12 ~~${default}" && sleep 0.5
+    echo -e "${blue} This script will install Proxmox on your Debian 12 and provide the option to install some additional packages...${default}" && sleep 0.5
+    echo ""
+    # Adding reboot message
+    echo -e "${yellow}WARNING: During the installation, the system may reboot several times. Avoid closing the script during installation!"
+    echo -e "Please be aware of this. Press 'Enter' to continue...${default}" 
+    read ok
+}
+
+bem_vindo()
+{
     # Bem-vindo com estilo
-    echo -e "${ciano}            Script desenvolvido por: \e[1;92mhttps://github.com/mathewalves${normal}."
+    echo -e "${cyan}            Script desenvolvido por: \e[1;92mhttps://github.com/mathewalves${default}." && sleep 0.5
     echo ""
     echo ""
-    echo -e "${ciano} --> Bem-vindo ao Script de Instalação do Proxmox no Debian 12 ~~${normal}"
-    echo -e "${azul} Este script instalará o Proxmox no seu Debian 12 e oferecerá a opção de instalar alguns pacotes adicionais...${normal}"
+    echo -e "${cyan} --> Bem-vindo ao Script de Instalação do Proxmox no Debian 12 ~~${default}" && sleep 0.5
+    echo -e "${blue} Este script instalará o Proxmox no seu Debian 12 e oferecerá a opção de instalar alguns pacotes adicionais...${default}" && sleep 0.5
     echo ""
     # Adicionando mensagem sobre reinicialização
-    echo -e "${vermelho}AVISO: Durante a instalação, o sistema pode reiniciar várias vezes. Evite Fechar o Script durante a instalação!${normal}"
-    echo -e "${amarelo}Por favor, esteja ciente disso. Aperte 'Enter' para continuar...${normal}" 
+    echo -e "${yellow}AVISO: Durante a instalação, o sistema pode reiniciar várias vezes. Evite Fechar o Script durante a instalação!"
+    echo -e "Por favor, esteja ciente disso. Aperte 'Enter' para continuar...${default}" 
     read ok
+}
 
-    echo -e "${ciano}Deseja instalar os ${verde}pacotes adicionais${ciano}? [S/N]${normal}"
-    read -p "Resposta:  " resposta
-
-    # Converte a resposta para minúsculas antes de comparar
-    resposta=$(echo "$resposta" | tr '[:upper:]' '[:lower:]')
-
-    if [ "$resposta" == "s" ]; then
-        # Instalação de Pacotes adicionais
+additional_packages()
+{
+    # Ask the user if they want to install additional packages
+    if whiptail --title "Installation of Additional Packages" --yesno "Do you want to install the additional packages?" 10 50; then
+        clear
+        # Installation of Additional Packages
         install_nala
         install_sudo
+        install_neofetch
+        install_network_tools
+
+        # Update system
+        update_system
+
+        # Install Proxmox part 1
+        ./scripts/install_proxmox-1.sh
+    else
+        # If the answer is not 'Yes', assume it's 'No'
+        echo -e "${cyan}Skipping installation of additional packages...${default}"
+        ./scripts/install_proxmox-1.sh
+    fi
+}
+
+pacotes_adicionais()
+{
+    # Perguntar ao usuário se deseja instalar pacotes adicionais
+    if whiptail --title "Instalação de Pacotes Adicionais" --yesno "Deseja instalar os pacotes adicionais?" 10 50; then
+        clear
+        # Instalação de Pacotes adicionais
+        install_nala
+        instalar_sudo
         install_neofetch
         install_network_tools
 
@@ -119,14 +122,184 @@ main()
 
         # Install proxmox parte 1
         ./scripts/install_proxmox-1.sh
-    else 
-    if [ "$resposta" != "n" ]; then
-        echo -e "${amarelo}Resposta inválida. Saindo do script.${normal}"
-        exit 1
-    fi
-        echo -e "${ciano}Pulando instalação dos pacotes adicionais...${normal}"
+    else
+        # Se a resposta não for 'Sim', então assume que é 'Não'
+        echo -e "${cyan}Pulando instalação dos pacotes adicionais...${default}"
         ./scripts/install_proxmox-1.sh
-    fi 
+    fi
+}
+
+# (en) Function to install sudo
+install_sudo() 
+{
+    echo -e "${cyan}Starting sudo installation...${default}"
+    nala install -y sudo
+
+    echo -e "${blue}Looking for users to grant sudo permissions...${default}"
+
+    # List all users in the system with sudo permissions
+    all_sudo_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1)
+
+    # Build an array for use with whiptail
+    user_array=()
+    for user in $all_sudo_users; do
+        user_array+=("$user" "")
+    done
+
+    # Loop to allow the user to select or skip
+    while true; do
+        selected_user=$(whiptail --title "User Selection" --menu "Select a user to grant sudo permissions:" 15 60 6 "${user_array[@]}" 3>&1 1>&2 2>&3)
+
+        # Check the user's choice
+        if [ $? -eq 0 ]; then
+            # Check if the selected user already has sudo permissions
+            if id "$selected_user" &>/dev/null && groups "$selected_user" | grep -qw sudo; then
+                clear
+                echo -e "${blue}User ${cyan}$selected_user${blue} already has sudo permissions. No action needed.${default}"
+            else
+                clear
+                sed -i "/^sudo/s/$/$selected_user/" /etc/group
+                echo -e "${green}Sudo permissions updated for user:${cyan} $selected_user${default}."
+            fi
+            break
+        else
+            clear
+            echo -e "${yellow}Sudo permissions were not changed.${default}"
+            break
+        fi
+    done
+}
+
+# (pt-br) Função para instalar o sudo
+instalar_sudo() 
+{
+    echo -e "${cyan}Iniciando instalação do sudo...${default}"
+    nala install -y sudo
+
+    echo -e "${blue}Procurando usuários para adicionar permissões sudo...${default}"
+
+    # Lista todos os usuários do sistema com permissões de sudo
+    all_sudo_users=$(grep -E '^[^:]+:[^:]+:[0-9]{4,}' /etc/passwd | cut -d: -f1)
+
+    # Constrói um array para usar com o whiptail
+    user_array=()
+    for user in $all_sudo_users; do
+        user_array+=("$user" "")
+    done
+
+    # Loop para permitir que o usuário selecione ou pule
+    while true; do
+        selected_user=$(whiptail --title "Seleção de Usuário" --menu "Selecione um usuário para adicionar permissões de sudo:" 15 60 6 "${user_array[@]}" 3>&1 1>&2 2>&3)
+
+        # Verifica a escolha do usuário
+        if [ $? -eq 0 ]; then
+            # Verifica se o usuário selecionado já tem permissões de sudo
+            if id "$selected_user" &>/dev/null && groups "$selected_user" | grep -qw sudo; then
+                clear
+                echo -e "${blue}O usuário ${cyan}$selected_user${blue} já possui permissões de sudo. Nenhuma ação necessária.${default}"
+            else
+                clear
+                sed -i "/^sudo/s/$/$selected_user/" /etc/group
+                echo -e "${green}Permissões de sudo atualizadas para o usuário:${cyan} $selected_user${default}."
+            fi
+            break
+        else
+            clear
+            echo "${yellow}Permissões de sudo não foram alteradas.${default}"
+            break
+        fi
+    done
+}
+
+# Function to install nala
+install_nala() 
+{
+    if [ "$language" == "en" ]; then
+        echo -e "${cyan}Starting the installation of 'nala'...${default}"
+    else
+        echo -e "${cyan}Iniciando a instalação do 'nala'...${default}"
+    fi
+    apt install -y nala
+    if [ "$language" == "en" ]; then
+        echo -e "${green}'nala' installed successfully!${default}"
+    else
+        echo -e "${green}'nala' instalado com sucesso!${default}"
+    fi
+}
+
+# Function to install neofetch
+install_neofetch() 
+{
+    if [ "$language" == "en" ]; then
+        echo -e "${cyan}Starting the installation of 'neofetch' with nala...${default}"
+    else
+        echo -e "${cyan}Iniciando a instalação do 'neofetch' com 'nala'...${default}"
+    fi
+    nala install -y neofetch
+    if [ "$language" == "en" ]; then
+        echo -e "${green}'neofetch' installed successfully!${default}"
+    else
+        echo -e "${green}'neofetch' instalado com sucesso!${default}"
+    fi
+}
+
+# Function to install network tools
+install_network_tools() 
+{
+    if [ "$language" == "en" ]; then
+        echo -e "${cyan}Starting the installation of 'net-tools' & 'nmap' with nala...${default}"
+    else
+        echo -e "${cyan}Iniciando a instalação de 'net-tools' e 'nmap' com nala...${default}"
+    fi
+    nala install -y nmap && nala install -y net-tools
+    if [ "$language" == "en" ]; then
+        echo -e "${green}Packages installed successfully!${default}"
+    else
+        echo -e "${green}Pacotes instalados com sucesso!${default}"
+    fi
+}
+
+# Function to update the system
+update_system() 
+{
+    if [ "$language" == "en" ]; then
+        echo -e "${cyan}Updating the system...${default}"
+    else
+        echo -e "${cyan}Atualizando o sistema...${default}"
+    fi
+    nala update -y && nala upgrade -y
+    if [ "$language" == "en" ]; then
+        echo -e "${green}Update successful!${default}"
+    else
+        echo -e "${green}Atualização bem-sucedida!${default}"
+    fi
+}
+   
+main()
+{
+    super_user
+    show_language_menu
+    clear
+    # Emoji ASCII
+    echo -e "${red}                                                             _                 "
+    echo -e "${red}  _ __  _ __ _____  ___ __ ___   _____  __          ___  ___| |_ _   _ _ __ "
+    echo -e "${red} | '_ \| '__/ _ \ \/ / '_ \` _ \ / _ \ \/ /         / __|/ _ \ __| | | | _  \\"
+    echo -e "${red} | |_) | | | (_) >  <| | | | | | (_) >  <          \__ \  __/ |_| |_| | |_) |"
+    echo -e "${red} | .__/|_|  \___/_/\_\_| |_| |_|\___/_/\_\  _____  |___/\___|\__|\__,_| .__/"
+    echo -e "${red} |_|                                       |_____|                    |_|    ${yellow}v1.0.1${default}"  
+    echo -e "\e[0m"
+    sleep 0.5
+    if [ "$language" == "en" ]; then
+        welcome
+    else
+        bem_vindo
+    fi
+
+    if [ "$language" == "en" ]; then
+        additional_packages
+    else
+        pacotes_adicionais
+    fi
 }
 
 main

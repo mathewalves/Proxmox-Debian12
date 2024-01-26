@@ -1,0 +1,44 @@
+[current version]  --> 1.0.1
+Version 1.0.1 of the Proxmox Installation Setup on Debian 12
+Summary:
+This version introduces interactive menus using whiptail, translation support for both pt-BR and English, and the option to choose whether to add a custom welcome screen. Additionally, code documentation has been enhanced for improved clarity.
+
+Changes:
+
+1. Interactive Menus with Whiptail:
+   - Utilized whiptail for interactive menus, enhancing user experience and simplifying navigation.
+
+2. Translation Support:
+   - Added language support for both pt-BR and English, allowing users to choose their preferred language during the installation.
+
+3. Custom Welcome Screen Option:
+   - Included an option to choose whether to add a custom welcome screen during installation, providing flexibility based on user preferences.
+
+4. Code Documentation:
+   - Improved code documentation for better readability and understanding of the installation scripts.
+
+5. Bug Fixes and Code Enhancements:
+   - Implemented various bug fixes and code improvements to enhance overall reliability and performance.
+
+These updates aim to make the Proxmox installation setup more user-friendly, versatile, and well-documented, ensuring a smoother installation process for users with different language preferences and levels of expertise.
+
+[...]
+
+Version 1.0.0 of the Proxmox Installation Setup on Debian 12
+Summary:
+This version marks the initial release of the Proxmox installation setup on Debian 12, providing an efficient and automated way to configure a robust virtualization environment.
+
+Description:
+Version 1.0.0 of the Proxmox installation setup on Debian 12 offers a practical solution for implementing Proxmox Virtual Environment (VE) on top of the stable Debian 12 base. This set of automated scripts aims to simplify the process of installing, configuring, and customizing Proxmox, allowing users to quickly establish a high-performance virtualized environment.
+
+Key Features:
+
+Automated Installation: The script automates the installation of Proxmox VE on the Debian 12 base, reducing the time and complexity of the process.
+
+Simplified Network Configuration: Facilitates network configuration, including the creation and customization of the vmbr0 network interface to facilitate communication between virtual machines and the external network.
+
+Customized Welcome Message: An informative and personalized welcome message is displayed to the user after installation, providing useful information, including details for accessing the Proxmox interface.
+
+Version Management: Prepares the environment for future updates and adjustments, facilitating the ongoing management of Proxmox VE on Debian 12.
+
+This release signifies a continued commitment to improving and expanding the toolset to simplify the Proxmox installation experience, making it accessible to users with different levels of expertise.

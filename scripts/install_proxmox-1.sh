@@ -1,50 +1,155 @@
 #!/bin/bash
 
-# Proxmox Setup v1.0.0
+# Proxmox Setup v1.0.1
 # by: Matheew Alves
 
 cd /Proxmox-Debian12
 
-# Carregar as variáveis de cores do arquivo colors.conf
+# Load configs files // Carregar os arquivos de configuração
 source ./configs/colors.conf
+source ./configs/language.conf
 
-install_proxmox-1()
+install_proxmox-1() 
 {
-    echo -e "${ciano}Setup Proxmox 1º parte."
-    echo -e "Passo 1/3: Atualizando /etc/hosts"
-    echo -e "...${normal}"
+    echo -e "${cyan}Setting up Proxmox - 1st part."
+    echo -e "Step 1/3: Updating /etc/hosts"
+    echo -e "...${default}"
 
-
-    # Obtendo o nome do host atual
+    # Get the current hostname
     current_hostname=$(hostname)
 
-    echo -e "${azul}nome do Host atual: ${ciano}"
+    echo -e "${blue}Current Hostname: ${cyan}"
     hostname
-    echo -e "${normal}"
-    
-    # Exibindo interfaces de rede
-    # Caminho para o diretório de configuração
+    echo -e "${default}"
+
+    # Display network interfaces using Whiptail
     config_dir="./configs"
     config_file="$config_dir/network.conf"
 
-    # Verificar se o diretório existe ou criar se não existir
     if [ ! -d "$config_dir" ]; then
         mkdir -p "$config_dir"
     fi
 
-    echo -e "${ciano}Selecione a sua interface de rede: [Digite o número]${normal}"
-   # Função para exibir informações da interface
-    exibir_informacoes_interface() {
+    echo -e "${cyan}Select your network interface: [Enter the number]${normal}"
+
+    # Function to display interface information
+    display_interface_info() 
+    {
         interface="$1"
         ip_address="$2"
         gateway="$3"
 
-        echo -e "${azul}Informações da interface ${ciano}$interface"
-        echo -e "${azul}Endereço IP: ${normal}$ip_address"
-        echo -e "${azul}Gateway: ${normal}$gateway"
+        echo -e "${blue}Interface Information ${default}$interface"
+        echo -e "${blue}IP Address: ${default}$ip_address"
+        echo -e "${blue}Gateway: ${default}$gateway"
     }
 
-    # Criar um array associativo para armazenar as informações
+    # Associative array to store interface information
+    declare -A interfaces
+
+    # Populate the associative array with interface information
+    while read -r interface ip_address _; do
+        if [ -n "$interface" ]; then
+            interfaces["$interface"]="$ip_address"
+        fi
+    done < <(ip addr show | awk '/inet / {split($2, a, "/"); print $NF, a[1]}')
+
+    # Main loop
+    while true; do
+        # Display options to the user
+        PS3="Select an option (Enter the number): "
+        options=()
+        for interface_option in "${!interfaces[@]}"; do
+            options+=("$interface_option" "")
+        done
+
+        selected_interface=$(whiptail --title "Network Interface Selection" --menu "Select a network interface:" 15 60 6 "${options[@]}" 3>&1 1>&2 2>&3)
+
+        if [ $? -eq 0 ]; then
+            read -r ip_address <<< "$(echo "${interfaces[$selected_interface]}" | awk '{print $1}')"
+            gateway="$(ip route show dev "$selected_interface" | awk '/via/ {print $3}')"
+            subnet_mask="$(ip addr show dev "$selected_interface" | awk '/inet / {split($2, a, "/"); print a[2]}')"
+            subnet_mask="${subnet_mask:-24}"
+            ip_address_with_mask="$ip_address/$subnet_mask"
+
+            display_interface_info "$selected_interface" "$ip_address" "$gateway"
+
+            # Display selected interface information
+            whiptail --title "Interface Information" --msgbox "Selected Interface: $selected_interface\nIP Address: $ip_address_with_mask\nGateway: $gateway" 10 60
+
+            # Ask the user to confirm the selection
+            whiptail --yesno "Do you want to select this interface?" 8 40
+            case $? in
+                0)
+                    clear
+                    echo "INTERFACE=$selected_interface" > "$config_file"
+                    echo "IP_ADDRESS=$ip_address_with_mask" >> "$config_file"
+                    echo "GATEWAY=$gateway" >> "$config_file"
+
+                    echo -e "${green}Settings saved to the file ${cyan}$config_file.${default}"
+                    break 2
+                    ;;
+                1)
+                    ;;
+                *)
+                    echo -e "${yellow}Invalid choice. Please select again.${default}"
+                    ;;
+            esac
+        else
+            echo -e "${yellow}Please select a valid option.${default}"
+        fi
+    done
+
+    echo -e "${blue}Adding or updating an entry in /etc/hosts for your IP address...${default}"
+
+    if grep -qE "$ip_address\s+$current_hostname\.proxmox\.com\s+$current_hostname" /etc/hosts; then
+        sed -i -E "s/($ip_address\s+$current_hostname\.proxmox\.com\s+$current_hostname).*/$ip_address       $current_hostname.proxmox.com $current_hostname/" /etc/hosts
+        echo -e "${blue}Entry for ${cyan}'$current_hostname'${blue} has been updated in the ${cyan}/etc/hosts${blue} file.${default}"
+    else 
+        echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | tee -a /etc/hosts > /dev/null
+        echo -e "${green}Entry successfully added to the ${cyan}/etc/hosts${green} file:${normal}"
+        cat /etc/hosts | grep "$current_hostname"
+    fi
+
+    echo -e "${cyan}...${default}"
+}
+
+instalar_proxmox-1() 
+{
+    echo -e "${cyan}Configurando o Proxmox - 1ª parte."
+    echo -e "Passo 1/3: Atualizando /etc/hosts"
+    echo -e "...${default}"
+
+    # Obtendo o nome do host atual
+    current_hostname=$(hostname)
+
+    echo -e "${blue}Nome do Host Atual: ${cyan}"
+    hostname
+    echo -e "${default}"
+
+    # Exibindo interfaces de rede usando o Whiptail
+    config_dir="./configs"
+    config_file="$config_dir/network.conf"
+
+    if [ ! -d "$config_dir" ]; then
+        mkdir -p "$config_dir"
+    fi
+
+    echo -e "${cyan}Selecione a sua interface de rede: [Digite o número]${normal}"
+
+    # Função para exibir informações da interface
+    display_interface_info() 
+    {
+        interface="$1"
+        ip_address="$2"
+        gateway="$3"
+
+        echo -e "${blue}Informações da Interface ${default}$interface"
+        echo -e "${blue}Endereço IP: ${default}$ip_address"
+        echo -e "${blue}Gateway: ${default}$gateway"
+    }
+
+    # Array associativo para armazenar informações da interface
     declare -A interfaces
 
     # Preencher o array associativo com informações das interfaces
@@ -58,157 +163,190 @@ install_proxmox-1()
     while true; do
         # Exibir opções para o usuário
         PS3="Selecione uma opção (Digite o número): "
-        select interface_option in "${!interfaces[@]}"; do
-            if [ -n "$interface_option" ]; then
-                # Exibir informações completas da interface
-                read -r ip_address <<< "$(echo "${interfaces[$interface_option]}" | awk '{print $1}')"
-                gateway="$(ip route show dev "$interface_option" | awk '/via/ {print $3}')"
-
-                # Obter a máscara de sub-rede (por padrão, /24 se não especificado)
-                mascara_subrede="$(ip addr show dev "$interface_option" | awk '/inet / {split($2, a, "/"); print a[2]}')"
-                mascara_subrede="${mascara_subrede:-24}"
-
-                # Adicionar a máscara de sub-rede ao endereço IP
-                ip_address_with_mask="$ip_address/$mascara_subrede"
-
-                exibir_informacoes_interface "$interface_option" "$ip_address" "$gateway"
-
-                # Perguntar ao usuário se deseja selecionar essa interface
-                read -p "Deseja selecionar essa interface? [S/N]: " escolha
-                case "$escolha" in
-                    [sS])
-                        # Guardar as informações no arquivo network.conf
-                        echo "INTERFACE=$interface_option" > "$config_file"
-                        echo "IP_ADDRESS=$ip_address_with_mask" >> "$config_file"
-                        echo "GATEWAY=$gateway" >> "$config_file"
-
-                        echo -e "${verde}Configurações salvas no arquivo ${ciano}$config_file.${normal}"
-                        break 2  # Sair do loop principal
-                        ;;
-                    [nN])
-                        # Continuar com o restante do loop
-                        ;;
-                    *)
-                        echo -e "${amarelo}Escolha inválida. Por favor, selecione novamente.${normal}"
-                        ;;
-                esac
-            else
-                echo -e "${amarelo}Por favor, selecione uma opção válida.${normal}"
-            fi
+        options=()
+        for interface_option in "${!interfaces[@]}"; do
+            options+=("$interface_option" "")
         done
+
+        selected_interface=$(whiptail --title "Seleção de Interface de Rede" --menu "Selecione uma interface de rede:" 15 60 6 "${options[@]}" 3>&1 1>&2 2>&3)
+
+        if [ $? -eq 0 ]; then
+            read -r ip_address <<< "$(echo "${interfaces[$selected_interface]}" | awk '{print $1}')"
+            gateway="$(ip route show dev "$selected_interface" | awk '/via/ {print $3}')"
+            mascara_subrede="$(ip addr show dev "$selected_interface" | awk '/inet / {split($2, a, "/"); print a[2]}')"
+            mascara_subrede="${mascara_subrede:-24}"
+            ip_address_with_mask="$ip_address/$mascara_subrede"
+
+            display_interface_info "$selected_interface" "$ip_address" "$gateway"
+
+            # Exibir informações da interface selecionada
+            whiptail --title "Informações da Interface" --msgbox "Interface Selecionada: $selected_interface\nEndereço IP: $ip_address_with_mask\nGateway: $gateway" 10 60
+
+            # Perguntar ao usuário se deseja confirmar a seleção
+            whiptail --yesno "Deseja selecionar esta interface?" 8 40
+            case $? in
+                0)
+                    clear
+                    echo "INTERFACE=$selected_interface" > "$config_file"
+                    echo "IP_ADDRESS=$ip_address_with_mask" >> "$config_file"
+                    echo "GATEWAY=$gateway" >> "$config_file"
+
+                    echo -e "${green}Configurações salvas no arquivo ${cyan}$config_file.${default}"
+                    break 2
+                    ;;
+                1)
+                    ;;
+                *)
+                    echo -e "${yellow}Escolha inválida. Por favor, selecione novamente.${default}"
+                    ;;
+            esac
+        else
+            echo -e "${yellow}Por favor, selecione uma opção válida.${default}"
+        fi
     done
 
-    echo -e "${azul}Adicionando ou atualizando uma entrada em /etc/hosts para seu endereço IP...${normal}"
-    # Verificar se o arquivo /etc/hosts já contém uma entrada para o nome do host
+    echo -e "${blue}Adicionando ou atualizando uma entrada em /etc/hosts para o seu endereço IP...${default}"
+
     if grep -qE "$ip_address\s+$current_hostname\.proxmox\.com\s+$current_hostname" /etc/hosts; then
-        # A entrada já existe, atualize-a
         sed -i -E "s/($ip_address\s+$current_hostname\.proxmox\.com\s+$current_hostname).*/$ip_address       $current_hostname.proxmox.com $current_hostname/" /etc/hosts
-        echo -e "${azul}A entrada para ${ciano}'$current_hostname'${azul} foi atualizada no arquivo ${ciano}/etc/hosts.${normal}"
+        echo -e "${blue}Entrada para ${cyan}'$current_hostname'${blue} foi atualizada no arquivo ${cyan}/etc/hosts.${default}"
     else 
-        # A entrada não existe, adicione-a
         echo "$ip_address       $current_hostname.proxmox.com $current_hostname" | tee -a /etc/hosts > /dev/null
-        echo -e "${verde}Entrada adicionada com sucesso ao arquivo ${ciano}/etc/hosts:${normal}"
+        echo -e "${green}Entrada adicionada com sucesso ao arquivo ${cyan}/etc/hosts:${normal}"
         cat /etc/hosts | grep "$current_hostname"
     fi
 
-    echo -e "${ciano}...${normal}"
+    echo -e "${cyan}...${default}"
 }
 
 install_proxmox-2()
 {
-    echo -e "${ciano}Setup Proxmox 1º parte."
-    echo -e "Passo 2/3: Adicionando o repositório do Proxmox VE"
-    echo -e "...${normal}"
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${cyan}Setting up Proxmox - 1st part."
+        echo -e "Step 2/3: Adding Proxmox VE Repository"
+        echo -e "...${default}"
+    else
+        echo -e "${cyan}Configurando o Proxmox - 1ª parte."
+        echo -e "Passo 2/3: Adicionando o Repositório do Proxmox VE"
+        echo -e "...${default}"
+    fi
 
     echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
 
     wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
 
-    echo -e "${amarelo}Verificando Key...${normal}"
+    echo -e "${yellow}Checking Key...${default}"
 
-    # Calcula o hash da chave
-    chave_hash=$(sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg | cut -d ' ' -f1)
+    # Calculate the hash of the key
+    key_hash=$(sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg | cut -d ' ' -f1)
 
-    # Verifica se a chave está vazia
-    if [ -z "$chave_hash" ]; then
-    echo -e "${vermelho}Erro: A chave não corresponde à esperada ou está vazia. A instalação do Proxmox pode ser comprometida.${normal}"
-    exit 1
+    # Check if the key is empty
+    if [ -z "$key_hash" ]; then
+        echo -e "${red}Error: The key does not match the expected one or is empty. Proxmox installation may be compromised.${default}"
+        exit 1
     else
-    echo -e "${verde}Sucesso: A chave corresponde à esperada.${normal}"
+        echo -e "${green}Success: The key matches the expected one.${default}"
     fi
 
     apt-get update && apt-get -y full-upgrade
 
-
-    echo -e "${ciano}...${normal}"
-
+    echo -e "${cyan}...${default}"
 }
 
 install_proxmox-3()
 {
-    echo -e "${ciano}Setup Proxmox 1º parte."
-    echo -e "Passo 3/3: Baixando o Proxmox VE Kernel..."
-    echo -e "...${normal}"
-
-     if command -v nala &> /dev/null; then
-        # Executar com 'nala' se estiver instalado
-        nala install -y proxmox-default-kernel
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${cyan}Setting up Proxmox - 1st part."
+        echo -e "Step 3/3: Downloading Proxmox VE Kernel..."
+        echo -e "...${default}"
     else
-        # Executar com 'apt' se 'nala' não estiver instalado
-         apt install -y proxmox-default-kernel
+        echo -e "${cyan}Configurando o Proxmox - 1ª parte."
+        echo -e "Passo 3/3: Baixando o Kernel do Proxmox VE..."
+        echo -e "...${default}"
     fi
 
-    echo -e "${verde}Instalação da 1ºParte do ProxMox concluída com sucesso!${normal}"
+    if command -v nala &> /dev/null; then
+        # Run with 'nala' if installed
+        nala install -y proxmox-default-kernel
+    else
+        # Run with 'apt' if 'nala' is not installed
+        apt install -y proxmox-default-kernel
+    fi
+
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${green}Installation of Proxmox 1st Part completed successfully!${default}"
+    else
+        echo -e "${green}Instalação da 1ª Parte do Proxmox concluída com sucesso!${default}"
+    fi
 }
 
 reboot_setup()
 {
-    echo -e "${amarelo}A 2º Parte da instalação será iniciada após o proximo reboot.${normal}"
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${yellow}The 2nd Part of the installation will commence after the next reboot."
+        # Display warning message about reboot
+        echo -e "${red}WARNING: ${yellow}The system needs to be rebooted. Saving work...${normal}"
+    else
+        echo -e "${yellow}A 2ª parte da instalação será iniciada após o próximo reboot."
+        # Exibir mensagem de aviso sobre o reboot
+        echo -e "${red}ATENÇÃO: ${yellow}O sistema precisa ser reiniciado. Salvando o trabalho...${normal}"
+    fi
 
-    # Exibe mensagem de aviso sobre a reinicialização
-    echo -e "${amarelo}AVISO: O sistema precisará ser reiniciado. Salvando trabalho...${normal}"
-
+   # Add script execution to user profiles
     for user_home in /home/*; do
         PROFILE_FILE="$user_home/.bashrc"
-        
-        # Verifica se o arquivo de perfil existe antes de adicionar
+
+        # Check if the profile file exists before adding
         if [ -f "$PROFILE_FILE" ]; then
-            # Adiciona a linha de execução do script ao final do arquivo
+            # Add the script execution line at the end of the file
             echo "" >> "$PROFILE_FILE"
-            echo "# Executar script após o login" >> "$PROFILE_FILE"
+            echo "# Execute script after login" >> "$PROFILE_FILE"
             echo "/Proxmox-Debian12/scripts/install_proxmox-2.sh" >> "$PROFILE_FILE"
             echo "" >> "$PROFILE_FILE"
 
-            echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
+            echo "Automatic configuration completed for user: $(basename "$user_home")."
         fi
-
-        # Adicione as seguintes linhas ao final do arquivo /root/.bashrc
-        echo "" >> /root/.bashrc
-        echo "# Executar script após o login" >> /root/.bashrc
-        echo "/Proxmox-Debian12/scripts/install_proxmox-2.sh" >> /root/.bashrc
-        echo "" >> /root/.bashrc
-
-        echo "Configuração automática concluída para o usuário root."
     done
 
-    # Habilita o serviço para iniciar na inicialização
+    # Add the following lines at the end of the /root/.bashrc file
+    echo "" >> /root/.bashrc
+    echo "# Execute script after login" >> /root/.bashrc
+    echo "/Proxmox-Debian12/scripts/install_proxmox-2.sh" >> /root/.bashrc
+    echo "" >> /root/.bashrc
 
-    echo -e "${verde}Trabalho Salvo!${ciano}"
-    echo -e "${ciano}Reiniciado o sistema automaticamente para concluir a instalação...${normal}"
-    echo -e "${amarelo}Faça o login como usuário '${ciano}root${amarelo}' após o reboot!${normal}"
+    echo "Automatic configuration completed for the root user."
 
-    # Aguarda alguns segundos antes de reiniciar
+    if [ "$LANGUAGE" == "en" ]; then
+        # Enable the service to start on boot
+        echo -e "${green}Work Saved!${cyan}"
+        echo -e "Rebooting the system automatically to complete the installation..."
+        echo -e "${yellow}Login as the '${cyan}root${yellow}' user after the reboot!${default}"
+    else
+        # Habilitar o serviço para iniciar com o sistema
+        echo -e "${green}Trabalho Salvo!${cyan}"
+        echo -e "Reiniciando o sistema automaticamente para concluir a instalação..."
+        echo -e "${yellow}Faça login como usuário '${cyan}root${yellow}' após o reboot!${default}"
+    fi
+
+    # Wait for a few seconds before rebooting
     sleep 5
 
-    # Reinicia o sistema
+    # Reboot the system
     systemctl reboot
 }
 
 main()
 {
-    # Instalação do Proxmox
-    echo -e "${ciano}iniciando instalação da 1ºParte do setup do Proxmox${normal}"
-    install_proxmox-1
+    if [ "$LANGUAGE" == "en" ]; then
+        # Proxmox Installation
+        echo -e "${cyan}Initiating installation of the 1st Part of Proxmox setup${default}"
+        install_proxmox-1
+    else
+        # Instalação do Proxmox
+        echo -e "${cyan}iniciando a instalação da 1ºParte do setup do Proxmox${default}"
+        instalar_proxmox-1
+    fi 
+
     install_proxmox-2
     install_proxmox-3
     reboot_setup

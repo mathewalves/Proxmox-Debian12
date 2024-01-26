@@ -1,87 +1,107 @@
 #!/bin/bash
 
-# Proxmox Setup v1.0.0
+# Proxmox Setup v1.0.1
 # by: Matheew Alves
 
-# Carregar as variáveis de cores do arquivo colors.conf
 cd /Proxmox-Debian12
+
+# Load configs files // Carregar os arquivos de configuração
 source ./configs/colors.conf
+source ./configs/language.conf
 
-# Tornando-se root
-if [ "$(whoami)" != "root" ]; then
-    echo -e "${ciano}Tornando-se superusuário...${normal}"
-    sudo -E bash "$0" "$@"  # Executa o script como root
-    exit $?
-fi
+# Becoming superuser // Tornando-se superusuário
+super_user()
+{
+    if [ "$(whoami)" != "root" ]; then
+        if [ "$LANGUAGE" == "en" ]; then
+            echo -e "${ciano}Log in as superuser...${default}"
+        else
+            echo -e "${ciano}Faça o login como superusuário...${default}" 
+        fi
+        sudo -E bash "$0" "$@"
+        exit $?
+    fi
+}
 
-# Remover inicialização do script junto com o sistema
-remove_start-script() 
+# Remove script initialization along with the system // Remover inicialização do script junto com o sistema
+remove_start_script() 
 {
     for user_home in /home/*; do
         PROFILE_FILE="$user_home/.bashrc"
         
-        # Remover a linha do script do arquivo de perfil
-        sed -i '/# Executar script após o login/,/# Fim do script 2/d' "$PROFILE_FILE"
-        echo -e "${azul}Removida a configuração do perfil para o usuário:${ciano} $(basename "$user_home").${normal}"
+        # Remove the script line from the profile file
+        sed -i '/# Execute script after login/,/# End of script 2/d' "$PROFILE_FILE"
+        echo -e "${blue}Removed profile configuration for user:${cyan} $(basename "$user_home").${normal}"
 
-       # Remover as linhas adicionadas ao /root/.bashrc
-        sed -i '/# Executar script após o login/,/\/Proxmox-Debian12\/scripts\/install_proxmox-2.sh/d' /root/.bashrc
-        echo -e "${azul}Removida a configuração automática do script no /root/.bashrc.${normal}"
+        # Remove the lines added to /root/.bashrc
+        sed -i '/# Execute script after login/,/\/Proxmox-Debian12\/scripts\/install_proxmox-2.sh/d' /root/.bashrc
+        echo -e "${blue}Removed automatic script configuration in /root/.bashrc.${normal}"
     done
 }
 
-# Iniciar configuração da bridge após o reboot
+# Start bridge configuration after reboot // Iniciar configuração da bridge após o reboot
 configure_bridge() 
 {
     for user_home in /home/*; do
         PROFILE_FILE="$user_home/.bashrc"
-        
-        # Verifica se o arquivo de perfil existe antes de adicionar
+
+        # Check if the profile file exists before adding
         if [ -f "$PROFILE_FILE" ]; then
-            # Adiciona a linha de execução do script ao final do arquivo
-            echo "" >> "$PROFILE_FILE"
-            echo "# Executar script após o login" >> "$PROFILE_FILE"
+            # Add the script execution line at the end of the file
+            echo -e "\n# Run script after login" >> "$PROFILE_FILE"
             echo "/Proxmox-Debian12/scripts/configure_bridge.sh" >> "$PROFILE_FILE"
-            echo "" >> "$PROFILE_FILE"
 
-            echo "Configuração automática concluída para o usuário: $(basename "$user_home")."
+            echo "Automatic configuration completed for user: $(basename "$user_home")."
         fi
-
-        # Adicione as seguintes linhas ao final do arquivo /root/.bashrc
-        echo "" >> /root/.bashrc
-        echo "# Executar script após o login" >> /root/.bashrc
-        echo "/Proxmox-Debian12/scripts/configure_bridge.sh" >> /root/.bashrc
-        echo "" >> /root/.bashrc
-
-        echo "Configuração automática concluída para o usuário root."
     done
+
+    # Add the following lines at the end of the /root/.bashrc file
+    echo -e "\n# Run script after login" >> /root/.bashrc
+    echo "/Proxmox-Debian12/scripts/configure_bridge.sh" >> /root/.bashrc
+
+    echo "Automatic configuration completed for the root user."
 }
+
 
 proxmox-ve_packages()
 {
-    echo -e "${ciano}Setup Proxmox 2º parte."
-    echo -e "${ciano}Passo 1/3: Proxmox VE packages"
-    echo -e "...${normal}"
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${cyan}Setting up Proxmox 2nd part."
+        echo -e "Step 1/3: Proxmox VE packages"
+        echo -e "...${default}"
+    else
+        echo -e "${cyan}Configurando a 2ª parte do Proxmox."
+        echo -e "Passo 1/3: Pacotes do Proxmox VE"
+        echo -e "...${default}"
+    fi
+
     if command -v nala &> /dev/null; then
-        # Executar com 'nala' se estiver instalado
+        # Execute with 'nala' if installed
         nala install -y proxmox-ve postfix open-iscsi chrony
     else
-        # Executar com 'apt' se 'nala' não estiver instalado
+        # Execute with 'apt' if 'nala' is not installed
         apt install -y proxmox-ve postfix open-iscsi chrony
     fi
 }
 
-# Remover kernel do Debian
+# Remove Debian kernel // Remover kernel do Debian
 remove_kernel()
 {
-    echo -e "${ciano}Setup Proxmox 2º parte."
-    echo -e "Passo 2/3: Removendo kernel antigo"
-    echo -e "...${normal}"
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${cyan}Setting up Proxmox 2nd part."
+        echo -e "Step 2/3: Removing old kernel"
+        echo -e "...${default}"
+    else
+        echo -e "${cyan}Configurando a 2ª parte do Proxmox."
+        echo -e "Passo 2/3: Removendo o kernel antigo"
+        echo -e "...${default}"
+    fi
+
     if command -v nala &> /dev/null; then
-        # Executar com 'nala' se estiver instalado
+        # Execute with 'nala' if installed
         nala remove -y linux-image-amd64 'linux-image-6.1*'
     else
-        # Executar com 'apt' se 'nala' não estiver instalado
+        # Execute with 'apt' if 'nala' is not installed
         apt remove -y linux-image-amd64 'linux-image-6.1*'
     fi
 
@@ -90,41 +110,54 @@ remove_kernel()
 
 remove_os-prober()
 {
-    echo -e "${ciano}Setup Proxmox 2º parte."
-    echo -e "${ciano}Passo 3/3: Removendo os-prober"
-    echo -e "...${normal}"
-   if command -v nala &> /dev/null; then
-        # Executar com 'nala' se estiver instalado
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${cyan}Setting up Proxmox 2nd part."
+        echo -e "Step 3/3: Removing os-prober"
+        echo -e "...${default}"
+    else
+        echo -e "${cyan}Configurando a 2ª parte do Proxmox."
+        echo -e "Passo 3/3: Removendo o os-prober"
+        echo -e "...${default}"
+    fi
+
+    if command -v nala &> /dev/null; then
+        # Execute with 'nala' if installed
         nala remove -y os-prober
     else
-        # Executar com 'apt' se 'nala' não estiver instalado
+        # Execute with 'apt' if 'nala' is not installed
         apt remove -y os-prober
-    fi 
+    fi
 }
 
 main()
 {
+    super_user
     proxmox-ve_packages
     remove_kernel
     remove_os-prober
 
-    # Verificar se o comando neofetch está instalado
+    # Check if the neofetch command is installed // Verificar se o comando neofetch está instalado
     if command -v neofetch &> /dev/null; then
         neofetch
     fi
 
-    remove_start-script
-    echo -e "${verde}2º Parte da instalação do ProxMox concluída com sucesso!${normal}"
-    configure_bridge  
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${green}2º Part of ProxMox installation completed successfully!${default}" 
+    else
+        echo -e "${green}2º Parte da instalação do ProxMox concluída com sucesso!${default}"
+    fi
 
-    echo -e "${ciano}Reiniciado o sistema automaticamente para concluir a instalação...${normal}"
-    echo -e "${amarelo}Faça o login como usuário '${ciano}root${amarelo}' após o reboot!${normal}"
-    
+    remove_start_script
+    configure_bridge
 
-    # Aguarda alguns segundos antes de reiniciar
+    if [ "$LANGUAGE" == "en" ]; then
+        echo -e "${red}WARNING: ${yellow}System automatically restarted to complete the installation..."
+        echo -e "Log in as the '${cyan}root${yellow}' user after the reboot!${default}"
+    else
+        echo -e "${red}AVISO: ${yellow}Reiniciado o sistema automaticamente para concluir a instalação..."
+        echo -e "Faça o login como usuário '${cyan}root${yellow}' após o reboot!${default}"
+    fi
     sleep 5
-
-    # Reinicia o sistema
     systemctl reboot
 }
 
